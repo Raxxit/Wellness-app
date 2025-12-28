@@ -1,9 +1,9 @@
 <script setup>
-import RegistrationForm from './components/RegistrationForm.vue'
+import login from './components/login.vue'
 </script>
 
 <template>
-  <RegistrationForm />
+  <login />
 </template>
 
 
