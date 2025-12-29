@@ -1,34 +1,12 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { ref } from 'vue';
+import { RouterLink } from 'vue-router';
 
-const route = useRoute();
-const isScrolled = ref(false);
 const isNavOpen = ref(false);
-
-const handleScroll = () => {
-  if (window.scrollY > 50) {
-    isScrolled.value = true;
-  } else {
-    isScrolled.value = false;
-  }
-};
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll);
-});
 </script>
 
 <template>
-  <nav class="navbar navbar-expand-lg fixed-top transition-all" :class="{
-    'navbar-scrolled': isScrolled,
-    'navbar-transparent': !isScrolled && !isNavOpen,
-    'bg-white shadow-sm': isScrolled || isNavOpen
-  }">
+  <nav class="navbar navbar-expand-lg fixed-top bg-white shadow-sm">
     <div class="container">
 
       <RouterLink class="navbar-brand fw-bold" to="/">
@@ -85,18 +63,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* --- 1. NAVBAR TRANSITIONS --- */
+/* --- 1. NAVBAR BASE STYLES --- */
 .navbar {
-  padding-top: 25px;
-  padding-bottom: 25px;
-  transition: all 0.4s ease-in-out;
-}
-
-.navbar-scrolled {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(10px);
+  padding-top: 15px;
+  padding-bottom: 15px;
 }
 
 /* --- 2. LINK ANIMATIONS --- */
@@ -138,18 +108,15 @@ onUnmounted(() => {
 }
 
 /* --- 3. DROPDOWN ANIMATION (DESKTOP ONLY) --- */
-/* We wrap this in a Media Query so it DOES NOT affect mobile */
 @media (min-width: 992px) {
   .dropdown-menu {
     display: block;
-    /* Only force block on desktop for animation */
     opacity: 0;
     visibility: hidden;
     transform: translateY(10px);
     transition: all 0.3s ease;
   }
 
-  /* Show on Hover (Desktop) */
   .nav-item.dropdown:hover .dropdown-menu {
     opacity: 1;
     visibility: visible;
@@ -168,16 +135,13 @@ onUnmounted(() => {
   }
 
   .navbar {
-    background-color: white !important;
     padding: 15px 0;
   }
 
-  /* On mobile, we fix the dropdown spacing */
   .dropdown-menu {
     border: none;
     box-shadow: none;
     padding-left: 20px;
-    /* Indent sub-items */
     margin-top: 0;
   }
 }
