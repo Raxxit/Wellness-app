@@ -50,8 +50,7 @@ onUnmounted(() => {
           </li>
 
           <li class="nav-item dropdown ms-lg-3">
-            <a class="nav-link dropdown-toggle btn btn-outline-light text-dark border-0" href="#" role="button"
-              data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="btn nav-link custom-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Account
             </a>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
@@ -103,7 +102,7 @@ onUnmounted(() => {
 /* --- 2. LINK ANIMATIONS --- */
 .custom-link {
   font-weight: 500;
-  color: #555;
+  color: #636262;
   margin: 0 10px;
   position: relative;
   transition: color 0.3s ease;
