@@ -80,7 +80,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Question 2: Sleep Quality -->
+                        <!-- Question 2: Sleep Quality (UPDATED - removed circle background) -->
                         <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.2s">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold text-primary mb-3">
@@ -89,31 +89,31 @@ onMounted(() => {
                                 
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="sleep-option text-center">
-                                        <div class="emoji-circle bg-light p-3 rounded-circle mb-2 mx-auto" style="width: 80px; height: 80px;">
+                                        <div class="emoji-wrapper mb-2 mx-auto">
                                             <span class="display-4">😴</span>
                                         </div>
                                         <p class="small mb-0">Poor</p>
                                     </div>
                                     <div class="sleep-option text-center">
-                                        <div class="emoji-circle bg-light p-3 rounded-circle mb-2 mx-auto" style="width: 80px; height: 80px;">
+                                        <div class="emoji-wrapper mb-2 mx-auto">
                                             <span class="display-4">😐</span>
                                         </div>
                                         <p class="small mb-0">Fair</p>
                                     </div>
                                     <div class="sleep-option text-center">
-                                        <div class="emoji-circle bg-light p-3 rounded-circle mb-2 mx-auto" style="width: 80px; height: 80px;">
+                                        <div class="emoji-wrapper mb-2 mx-auto">
                                             <span class="display-4">😊</span>
                                         </div>
                                         <p class="small mb-0">Good</p>
                                     </div>
                                     <div class="sleep-option text-center">
-                                        <div class="emoji-circle bg-light p-3 rounded-circle mb-2 mx-auto" style="width: 80px; height: 80px;">
+                                        <div class="emoji-wrapper mb-2 mx-auto">
                                             <span class="display-4">😄</span>
                                         </div>
                                         <p class="small mb-0">Great</p>
                                     </div>
                                     <div class="sleep-option text-center">
-                                        <div class="emoji-circle bg-light p-3 rounded-circle mb-2 mx-auto" style="width: 80px; height: 80px;">
+                                        <div class="emoji-wrapper mb-2 mx-auto">
                                             <span class="display-4">🤩</span>
                                         </div>
                                         <p class="small mb-0">Excellent</p>
@@ -295,18 +295,22 @@ onMounted(() => {
     background-color: rgba(102, 126, 234, 0.05);
 }
 
-.emoji-circle {
+/* Updated emoji styles - no circle background */
+.emoji-wrapper {
     transition: all 0.3s ease;
     cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
     border: 3px solid transparent;
 }
 
-.emoji-circle:hover {
+.emoji-wrapper:hover {
     transform: scale(1.1);
     border-color: #667eea;
+    background-color: rgba(102, 126, 234, 0.1);
 }
 
-.emoji-circle.active {
+.emoji-wrapper.active {
     border-color: #667eea;
     background-color: rgba(102, 126, 234, 0.1);
 }
@@ -359,13 +363,8 @@ onMounted(() => {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .sleep-option .emoji-circle {
-        width: 60px !important;
-        height: 60px !important;
-    }
-    
     .sleep-option span {
-        font-size: 2rem !important;
+        font-size: 2.5rem !important;
     }
 }
 
