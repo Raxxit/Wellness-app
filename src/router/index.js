@@ -8,7 +8,30 @@ const router = createRouter({
         // You will create these other files later as you need them
         // { path: '/community', component: () => import('../views/CommunityView.vue') },
         // { path: '/login', component: () => import('../views/LoginView.vue') },
+    
+    {
+            path: '/about',
+            name: 'about',
+            component: AboutView
+        },
+
+{
+            path: '/questionnaire',
+            name: 'questionnaire',
+            component: questionnaireView
+        }
+
+
+
+
     ]
 })
 
+
+
+
+
 export default router
+
+
+
