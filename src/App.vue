@@ -5,7 +5,7 @@ import { RouterView } from 'vue-router';
 </script>
 
 <template>
-  <div class="app-container">
+  <div class="app-container" style="padding-top: 75px;">
     <AppNavbar />
     <RouterView />
     <AppFooter />
