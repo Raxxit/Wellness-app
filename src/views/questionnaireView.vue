@@ -1,6 +1,81 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { WOW } from 'wowjs';
+
+// Reactive state for selections
+const selectedGoals = ref([]);
+const selectedSleepQuality = ref(null);
+const selectedStressLevel = ref(5); // Default middle value
+const selectedHabits = ref([]);
+const energyLevels = ref({
+  morning: 'medium',
+  afternoon: 'high', 
+  evening: 'low'
+});
+
+// Function to toggle goal selection
+const toggleGoal = (goal) => {
+  const index = selectedGoals.value.indexOf(goal);
+  if (index === -1) {
+    selectedGoals.value.push(goal);
+  } else {
+    selectedGoals.value.splice(index, 1);
+  }
+};
+
+// Function to select sleep quality
+const selectSleepQuality = (quality) => {
+  selectedSleepQuality.value = quality;
+};
+
+// Function to toggle habit selection
+const toggleHabit = (habit) => {
+  const index = selectedHabits.value.indexOf(habit);
+  if (index === -1) {
+    selectedHabits.value.push(habit);
+  } else {
+    selectedHabits.value.splice(index, 1);
+  }
+};
+
+// Function to select energy level
+const selectEnergyLevel = (time, level) => {
+  energyLevels.value[time] = level;
+};
+
+// Get energy level class based on value
+const getEnergyClass = (level) => {
+  switch(level) {
+    case 'low': return 'bg-danger';
+    case 'medium': return 'bg-warning';
+    case 'high': return 'bg-success';
+    default: return 'bg-secondary';
+  }
+};
+
+// Get energy height based on value
+const getEnergyHeight = (level) => {
+  switch(level) {
+    case 'low': return '30%';
+    case 'medium': return '60%';
+    case 'high': return '90%';
+    default: return '50%';
+  }
+};
+
+// Form submission handler
+const submitQuestionnaire = () => {
+  const data = {
+    goals: selectedGoals.value,
+    sleepQuality: selectedSleepQuality.value,
+    stressLevel: selectedStressLevel.value,
+    habits: selectedHabits.value,
+    energyLevels: energyLevels.value
+  };
+  console.log('Submitting questionnaire:', data);
+  // Here you would typically send this to your backend
+  alert('Questionnaire submitted! Check console for data.');
+};
 
 onMounted(() => {
     new WOW().init();
@@ -41,37 +116,61 @@ onMounted(() => {
                                 
                                 <div class="row g-3">
                                     <div class="col-6 col-md-4">
-                                        <div class="goal-card text-center p-3 rounded border hover-effect">
+                                        <div 
+                                            class="goal-card text-center p-3 rounded border hover-effect"
+                                            :class="{ 'active': selectedGoals.includes('stress') }"
+                                            @click="toggleGoal('stress')"
+                                        >
                                             <div class="display-4 mb-2">🧘</div>
                                             <p class="mb-0 fw-medium">Stress Relief</p>
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="goal-card text-center p-3 rounded border hover-effect">
+                                        <div 
+                                            class="goal-card text-center p-3 rounded border hover-effect"
+                                            :class="{ 'active': selectedGoals.includes('sleep') }"
+                                            @click="toggleGoal('sleep')"
+                                        >
                                             <div class="display-4 mb-2">😴</div>
                                             <p class="mb-0 fw-medium">Better Sleep</p>
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="goal-card text-center p-3 rounded border hover-effect">
+                                        <div 
+                                            class="goal-card text-center p-3 rounded border hover-effect"
+                                            :class="{ 'active': selectedGoals.includes('energy') }"
+                                            @click="toggleGoal('energy')"
+                                        >
                                             <div class="display-4 mb-2">💪</div>
                                             <p class="mb-0 fw-medium">More Energy</p>
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="goal-card text-center p-3 rounded border hover-effect">
+                                        <div 
+                                            class="goal-card text-center p-3 rounded border hover-effect"
+                                            :class="{ 'active': selectedGoals.includes('mindfulness') }"
+                                            @click="toggleGoal('mindfulness')"
+                                        >
                                             <div class="display-4 mb-2">🧠</div>
                                             <p class="mb-0 fw-medium">Mindfulness</p>
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="goal-card text-center p-3 rounded border hover-effect">
+                                        <div 
+                                            class="goal-card text-center p-3 rounded border hover-effect"
+                                            :class="{ 'active': selectedGoals.includes('mental') }"
+                                            @click="toggleGoal('mental')"
+                                        >
                                             <div class="display-4 mb-2">❤️</div>
                                             <p class="mb-0 fw-medium">Mental Health</p>
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="goal-card text-center p-3 rounded border hover-effect">
+                                        <div 
+                                            class="goal-card text-center p-3 rounded border hover-effect"
+                                            :class="{ 'active': selectedGoals.includes('nutrition') }"
+                                            @click="toggleGoal('nutrition')"
+                                        >
                                             <div class="display-4 mb-2">🥗</div>
                                             <p class="mb-0 fw-medium">Nutrition</p>
                                         </div>
@@ -80,7 +179,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Question 2: Sleep Quality (UPDATED - removed circle background) -->
+                        <!-- Question 2: Sleep Quality -->
                         <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.2s">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold text-primary mb-3">
@@ -88,32 +187,62 @@ onMounted(() => {
                                 </h4>
                                 
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <div class="sleep-option text-center">
-                                        <div class="emoji-wrapper mb-2 mx-auto">
+                                    <div 
+                                        class="sleep-option text-center"
+                                        @click="selectSleepQuality('poor')"
+                                    >
+                                        <div 
+                                            class="emoji-wrapper mb-2 mx-auto"
+                                            :class="{ 'active': selectedSleepQuality === 'poor' }"
+                                        >
                                             <span class="display-4">😴</span>
                                         </div>
                                         <p class="small mb-0">Poor</p>
                                     </div>
-                                    <div class="sleep-option text-center">
-                                        <div class="emoji-wrapper mb-2 mx-auto">
+                                    <div 
+                                        class="sleep-option text-center"
+                                        @click="selectSleepQuality('fair')"
+                                    >
+                                        <div 
+                                            class="emoji-wrapper mb-2 mx-auto"
+                                            :class="{ 'active': selectedSleepQuality === 'fair' }"
+                                        >
                                             <span class="display-4">😐</span>
                                         </div>
                                         <p class="small mb-0">Fair</p>
                                     </div>
-                                    <div class="sleep-option text-center">
-                                        <div class="emoji-wrapper mb-2 mx-auto">
+                                    <div 
+                                        class="sleep-option text-center"
+                                        @click="selectSleepQuality('good')"
+                                    >
+                                        <div 
+                                            class="emoji-wrapper mb-2 mx-auto"
+                                            :class="{ 'active': selectedSleepQuality === 'good' }"
+                                        >
                                             <span class="display-4">😊</span>
                                         </div>
                                         <p class="small mb-0">Good</p>
                                     </div>
-                                    <div class="sleep-option text-center">
-                                        <div class="emoji-wrapper mb-2 mx-auto">
+                                    <div 
+                                        class="sleep-option text-center"
+                                        @click="selectSleepQuality('great')"
+                                    >
+                                        <div 
+                                            class="emoji-wrapper mb-2 mx-auto"
+                                            :class="{ 'active': selectedSleepQuality === 'great' }"
+                                        >
                                             <span class="display-4">😄</span>
                                         </div>
                                         <p class="small mb-0">Great</p>
                                     </div>
-                                    <div class="sleep-option text-center">
-                                        <div class="emoji-wrapper mb-2 mx-auto">
+                                    <div 
+                                        class="sleep-option text-center"
+                                        @click="selectSleepQuality('excellent')"
+                                    >
+                                        <div 
+                                            class="emoji-wrapper mb-2 mx-auto"
+                                            :class="{ 'active': selectedSleepQuality === 'excellent' }"
+                                        >
                                             <span class="display-4">🤩</span>
                                         </div>
                                         <p class="small mb-0">Excellent</p>
@@ -134,8 +263,15 @@ onMounted(() => {
                                         <span class="text-muted">Very Low</span>
                                         <span class="text-muted">Very High</span>
                                     </div>
-                                    <input type="range" class="form-range" min="1" max="10" step="1" 
-                                           style="height: 12px; cursor: pointer;">
+                                    <input 
+                                        type="range" 
+                                        class="form-range" 
+                                        min="1" 
+                                        max="10" 
+                                        step="1" 
+                                        style="height: 12px; cursor: pointer;"
+                                        v-model="selectedStressLevel"
+                                    >
                                     <div class="d-flex justify-content-between mt-1">
                                         <span class="badge bg-success">Calm</span>
                                         <span class="badge bg-warning">Moderate</span>
@@ -154,9 +290,19 @@ onMounted(() => {
                                 
                                 <div class="row g-2">
                                     <div class="col-6 col-md-4">
-                                        <div class="habit-item p-3 border rounded d-flex align-items-center mb-2">
+                                        <div 
+                                            class="habit-item p-3 border rounded d-flex align-items-center mb-2"
+                                            :class="{ 'active': selectedHabits.includes('meditation') }"
+                                            @click="toggleHabit('meditation')"
+                                        >
                                             <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input" type="checkbox" id="meditation">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="meditation"
+                                                    :checked="selectedHabits.includes('meditation')"
+                                                    @change="toggleHabit('meditation')"
+                                                >
                                             </div>
                                             <label class="form-check-label ms-2 mb-0" for="meditation">
                                                 Meditation
@@ -164,9 +310,19 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="habit-item p-3 border rounded d-flex align-items-center mb-2">
+                                        <div 
+                                            class="habit-item p-3 border rounded d-flex align-items-center mb-2"
+                                            :class="{ 'active': selectedHabits.includes('exercise') }"
+                                            @click="toggleHabit('exercise')"
+                                        >
                                             <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input" type="checkbox" id="exercise">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="exercise"
+                                                    :checked="selectedHabits.includes('exercise')"
+                                                    @change="toggleHabit('exercise')"
+                                                >
                                             </div>
                                             <label class="form-check-label ms-2 mb-0" for="exercise">
                                                 Exercise
@@ -174,9 +330,19 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="habit-item p-3 border rounded d-flex align-items-center mb-2">
+                                        <div 
+                                            class="habit-item p-3 border rounded d-flex align-items-center mb-2"
+                                            :class="{ 'active': selectedHabits.includes('journaling') }"
+                                            @click="toggleHabit('journaling')"
+                                        >
                                             <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input" type="checkbox" id="journaling">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="journaling"
+                                                    :checked="selectedHabits.includes('journaling')"
+                                                    @change="toggleHabit('journaling')"
+                                                >
                                             </div>
                                             <label class="form-check-label ms-2 mb-0" for="journaling">
                                                 Journaling
@@ -184,9 +350,19 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="habit-item p-3 border rounded d-flex align-items-center mb-2">
+                                        <div 
+                                            class="habit-item p-3 border rounded d-flex align-items-center mb-2"
+                                            :class="{ 'active': selectedHabits.includes('yoga') }"
+                                            @click="toggleHabit('yoga')"
+                                        >
                                             <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input" type="checkbox" id="yoga">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="yoga"
+                                                    :checked="selectedHabits.includes('yoga')"
+                                                    @change="toggleHabit('yoga')"
+                                                >
                                             </div>
                                             <label class="form-check-label ms-2 mb-0" for="yoga">
                                                 Yoga
@@ -194,9 +370,19 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="habit-item p-3 border rounded d-flex align-items-center mb-2">
+                                        <div 
+                                            class="habit-item p-3 border rounded d-flex align-items-center mb-2"
+                                            :class="{ 'active': selectedHabits.includes('walking') }"
+                                            @click="toggleHabit('walking')"
+                                        >
                                             <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input" type="checkbox" id="walking">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="walking"
+                                                    :checked="selectedHabits.includes('walking')"
+                                                    @change="toggleHabit('walking')"
+                                                >
                                             </div>
                                             <label class="form-check-label ms-2 mb-0" for="walking">
                                                 Walking
@@ -204,9 +390,19 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <div class="col-6 col-md-4">
-                                        <div class="habit-item p-3 border rounded d-flex align-items-center mb-2">
+                                        <div 
+                                            class="habit-item p-3 border rounded d-flex align-items-center mb-2"
+                                            :class="{ 'active': selectedHabits.includes('breathing') }"
+                                            @click="toggleHabit('breathing')"
+                                        >
                                             <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input" type="checkbox" id="breathing">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="breathing"
+                                                    :checked="selectedHabits.includes('breathing')"
+                                                    @change="toggleHabit('breathing')"
+                                                >
                                             </div>
                                             <label class="form-check-label ms-2 mb-0" for="breathing">
                                                 Breathing
@@ -229,23 +425,92 @@ onMounted(() => {
                                         <div class="col">
                                             <p class="small text-muted mb-1">Morning</p>
                                             <div class="energy-bar mx-auto" style="height: 80px; width: 40px;">
-                                                <div class="energy-fill bg-warning rounded-top" style="height: 60%;"></div>
+                                                <div 
+                                                    class="energy-fill rounded-top"
+                                                    :class="getEnergyClass(energyLevels.morning)"
+                                                    :style="{ height: getEnergyHeight(energyLevels.morning) }"
+                                                ></div>
                                             </div>
-                                            <span class="badge bg-warning mt-2">Medium</span>
+                                            <div class="btn-group btn-group-sm mt-2" role="group">
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.morning === 'low' }"
+                                                    @click="selectEnergyLevel('morning', 'low')"
+                                                >Low</button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.morning === 'medium' }"
+                                                    @click="selectEnergyLevel('morning', 'medium')"
+                                                >Med</button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.morning === 'high' }"
+                                                    @click="selectEnergyLevel('morning', 'high')"
+                                                >High</button>
+                                            </div>
                                         </div>
                                         <div class="col">
                                             <p class="small text-muted mb-1">Afternoon</p>
                                             <div class="energy-bar mx-auto" style="height: 80px; width: 40px;">
-                                                <div class="energy-fill bg-success rounded-top" style="height: 90%;"></div>
+                                                <div 
+                                                    class="energy-fill rounded-top"
+                                                    :class="getEnergyClass(energyLevels.afternoon)"
+                                                    :style="{ height: getEnergyHeight(energyLevels.afternoon) }"
+                                                ></div>
                                             </div>
-                                            <span class="badge bg-success mt-2">High</span>
+                                            <div class="btn-group btn-group-sm mt-2" role="group">
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.afternoon === 'low' }"
+                                                    @click="selectEnergyLevel('afternoon', 'low')"
+                                                >Low</button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.afternoon === 'medium' }"
+                                                    @click="selectEnergyLevel('afternoon', 'medium')"
+                                                >Med</button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.afternoon === 'high' }"
+                                                    @click="selectEnergyLevel('afternoon', 'high')"
+                                                >High</button>
+                                            </div>
                                         </div>
                                         <div class="col">
                                             <p class="small text-muted mb-1">Evening</p>
                                             <div class="energy-bar mx-auto" style="height: 80px; width: 40px;">
-                                                <div class="energy-fill bg-danger rounded-top" style="height: 30%;"></div>
+                                                <div 
+                                                    class="energy-fill rounded-top"
+                                                    :class="getEnergyClass(energyLevels.evening)"
+                                                    :style="{ height: getEnergyHeight(energyLevels.evening) }"
+                                                ></div>
                                             </div>
-                                            <span class="badge bg-danger mt-2">Low</span>
+                                            <div class="btn-group btn-group-sm mt-2" role="group">
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.evening === 'low' }"
+                                                    @click="selectEnergyLevel('evening', 'low')"
+                                                >Low</button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.evening === 'medium' }"
+                                                    @click="selectEnergyLevel('evening', 'medium')"
+                                                >Med</button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    :class="{ 'active': energyLevels.evening === 'high' }"
+                                                    @click="selectEnergyLevel('evening', 'high')"
+                                                >High</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -254,8 +519,11 @@ onMounted(() => {
 
                         <!-- Submit Section -->
                         <div class="text-center mt-5 wow fadeInUp" data-wow-delay="0.6s">
-                            <button class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-sm">
-                                <i class="fas fa-heartbeat me-2"></i>
+                            <button 
+                                class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-sm"
+                                @click="submitQuestionnaire"
+                            >
+                                <i class=""></i>
                                 Get My Wellness Plan
                             </button>
                             <p class="text-muted mt-3 small">
@@ -292,10 +560,10 @@ onMounted(() => {
 
 .goal-card.active {
     border-color: #667eea;
-    background-color: rgba(102, 126, 234, 0.05);
+    background-color: rgba(102, 126, 234, 0.1);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.15);
 }
 
-/* Updated emoji styles - no circle background */
 .emoji-wrapper {
     transition: all 0.3s ease;
     cursor: pointer;
@@ -312,7 +580,8 @@ onMounted(() => {
 
 .emoji-wrapper.active {
     border-color: #667eea;
-    background-color: rgba(102, 126, 234, 0.1);
+    background-color: rgba(102, 126, 234, 0.15);
+    transform: scale(1.1);
 }
 
 .stress-slider-container {
@@ -358,13 +627,24 @@ onMounted(() => {
     position: absolute;
     bottom: 0;
     width: 100%;
-    transition: height 0.5s ease;
+    transition: all 0.3s ease;
+}
+
+.btn-group .btn.active {
+    background-color: #667eea;
+    border-color: #667eea;
+    color: white;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .sleep-option span {
         font-size: 2.5rem !important;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
     }
 }
 
