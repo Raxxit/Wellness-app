@@ -31,7 +31,7 @@
             <input 
               type="email" 
               v-model="form.email"
-              placeholder="Enter your email"
+              placeholder=""
               required
               :disabled="loading"
               class="form-input"
@@ -50,7 +50,7 @@
             <input 
               :type="showPassword ? 'text' : 'password'"
               v-model="form.password"
-              placeholder="Enter your password"
+              placeholder=""
               required
               :disabled="loading"
               class="form-input"
