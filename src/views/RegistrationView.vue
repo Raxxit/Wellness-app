@@ -5,20 +5,34 @@ import { WOW } from 'wowjs';
 import registrationBg from '@/assets/img/3.jpg';
 
 const formData = ref({
-  fullName: '',
+  username: '',
   email: '',
   password: '',
   confirmPassword: '',
-  phone: '',
   age: '',
   gender: '',
-  reasonForJoining: ''
 });
 
-const handleSubmit = () => {
-  console.log('Form submitted:', formData.value);
-  // UI only - no backend functionality yet
-  alert('Welcome to your wellness journey! (UI only - no backend yet)');
+const handleSubmit = async () => {
+  const data = new FormData();
+  data.append('username', formData.value.username);
+  data.append('email', formData.value.email);
+  data.append('age', formData.value.age);
+  data.append('gender', formData.value.gender);
+  data.append('password', formData.value.password);
+
+  try {
+    // 2. Send as Form Data
+    // Axios automatically sets header to 'multipart/form-data' or 'application/x-www-form-urlencoded'
+    const response = await axios.post('http://127.0.0.1:5000/api/register', data);
+
+    if (response.status === 200) {
+      alert('Registration successful!');
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Registration failed');
+  }
 };
 
 onMounted(() => {
@@ -90,22 +104,16 @@ onMounted(() => {
               <div class="card-body p-4 p-md-5">
                 <h2 class="fw-bold mb-2 text-center">Create Your Account</h2>
                 <p class="text-center text-muted mb-4">Join thousands on their path to better mental health</p>
-                
+
                 <form @submit.prevent="handleSubmit">
-                  
+
                   <!-- Full Name -->
                   <div class="mb-3">
-                    <label for="fullName" class="form-label fw-bold">
-                      <i class="fa fa-user text-primary me-2"></i>Full Name
+                    <label for="username" class="form-label fw-bold">
+                      <i class="fa fa-user text-primary me-2"></i>User Name
                     </label>
-                    <input 
-                      type="text" 
-                      class="form-control form-control-lg" 
-                      id="fullName" 
-                      v-model="formData.fullName"
-                      placeholder="Enter your full name"
-                      required
-                    >
+                    <input type="text" class="form-control form-control-lg" id="username" v-model="formData.username"
+                      placeholder="Enter your user name" required>
                   </div>
 
                   <!-- Email -->
@@ -113,34 +121,10 @@ onMounted(() => {
                     <label for="email" class="form-label fw-bold">
                       <i class="fa fa-envelope text-primary me-2"></i>Email Address
                     </label>
-                    <input 
-                      type="email" 
-                      class="form-control form-control-lg" 
-                      id="email" 
-                      v-model="formData.email"
-                      placeholder="your.email@example.com"
-                      required
-                    >
+                    <input type="email" class="form-control form-control-lg" id="email" v-model="formData.email"
+                      placeholder="your.email@example.com" required>
                     <small class="text-muted">We'll send your wellness reports here</small>
                   </div>
-
-                 <!-- Phone -->
-<div class="mb-3">
-  <label for="phone" class="form-label fw-bold">
-    <i class="fa fa-phone text-primary me-2"></i>Phone Number
-  </label>
-  <input 
-    type="tel" 
-    class="form-control form-control-lg" 
-    id="phone" 
-    v-model="formData.phone"
-    placeholder="5123 4567"
-    pattern="[0-9]{4}[ ]?[0-9]{4}"
-    maxlength="9"
-    required
-  >
-  
-</div>
 
                   <!-- Age and Gender Row -->
                   <div class="row">
@@ -148,28 +132,15 @@ onMounted(() => {
                       <label for="age" class="form-label fw-bold">
                         <i class="fa fa-birthday-cake text-primary me-2"></i>Age
                       </label>
-                      <input 
-                        type="number" 
-                        class="form-control form-control-lg" 
-                        id="age" 
-                        v-model="formData.age"
-                        placeholder="25"
-                        min="13"
-                        max="120"
-                        required
-                      >
+                      <input type="number" class="form-control form-control-lg" id="age" v-model="formData.age"
+                        placeholder="25" min="13" max="120" required>
                     </div>
 
                     <div class="col-md-6 mb-3">
                       <label for="gender" class="form-label fw-bold">
                         <i class="fa fa-venus-mars text-primary me-2"></i>Gender
                       </label>
-                      <select 
-                        class="form-control form-control-lg" 
-                        id="gender" 
-                        v-model="formData.gender"
-                        required
-                      >
+                      <select class="form-control form-control-lg" id="gender" v-model="formData.gender" required>
                         <option value="">Select</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -179,43 +150,13 @@ onMounted(() => {
                     </div>
                   </div>
 
-                  <!-- Reason for Joining -->
-                  <div class="mb-3">
-                    <label for="reasonForJoining" class="form-label fw-bold">
-                      <i class="fa fa-heart text-primary me-2"></i>What brings you here?
-                    </label>
-                    <select 
-                      class="form-control form-control-lg" 
-                      id="reasonForJoining" 
-                      v-model="formData.reasonForJoining"
-                      required
-                    >
-                      <option value="">Choose your main goal</option>
-                      <option value="stress">Managing stress and anxiety</option>
-                      <option value="depression">Dealing with depression</option>
-                      <option value="motivation">Seeking motivation and purpose</option>
-                      <option value="mood">Improving overall mood</option>
-                      <option value="sleep">Better sleep quality</option>
-                      <option value="confidence">Building self-confidence</option>
-                      <option value="general">General mental wellness</option>
-                      <option value="other">Other</option>
-                    </select>
-                    <small class="text-muted">This helps us personalize your experience</small>
-                  </div>
-
                   <!-- Password -->
                   <div class="mb-3">
                     <label for="password" class="form-label fw-bold">
                       <i class="fa fa-lock text-primary me-2"></i>Password
                     </label>
-                    <input 
-                      type="password" 
-                      class="form-control form-control-lg" 
-                      id="password" 
-                      v-model="formData.password"
-                      placeholder="Create a strong password"
-                      required
-                    >
+                    <input type="password" class="form-control form-control-lg" id="password"
+                      v-model="formData.password" placeholder="Create a strong password" required>
                   </div>
 
                   <!-- Confirm Password -->
@@ -223,14 +164,8 @@ onMounted(() => {
                     <label for="confirmPassword" class="form-label fw-bold">
                       <i class="fa fa-lock text-primary me-2"></i>Confirm Password
                     </label>
-                    <input 
-                      type="password" 
-                      class="form-control form-control-lg" 
-                      id="confirmPassword" 
-                      v-model="formData.confirmPassword"
-                      placeholder="Re-enter your password"
-                      required
-                    >
+                    <input type="password" class="form-control form-control-lg" id="confirmPassword"
+                      v-model="formData.confirmPassword" placeholder="Re-enter your password" required>
                   </div>
 
                   <!-- Privacy Notice -->
@@ -248,7 +183,7 @@ onMounted(() => {
 
                   <!-- Login Link -->
                   <p class="text-center mt-4 mb-0 text-muted">
-                    Already have an account? 
+                    Already have an account?
                     <router-link to="/" class="text-primary fw-bold text-decoration-none">Login here</router-link>
                   </p>
                 </form>
