@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
+import QuestionnaireView from '@/views/questionnaireView.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,8 +17,21 @@ const router = createRouter({
             component: AboutView
         },
 
+        {
+            path: '/questionnaire',
+            name: 'questionnaire',
+            component: QuestionnaireView
+        },
+
 
     ]
 })
 
+
+
+
+
 export default router
+
+
+
