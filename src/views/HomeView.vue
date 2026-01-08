@@ -7,8 +7,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import slide1 from "@/assets/img/1.jpg";
-import slide2 from "@/assets/img/3.webp";
+import slide1 from "@/assets/img/1.png";
+import slide2 from "@/assets/img/3.png";
 
 import { WOW } from "wowjs";
 
@@ -49,27 +49,13 @@ onMounted(() => {
           <div
             class="slide-content"
             :style="{ backgroundImage: `url(${slide1})` }"
-          >
-            <div class="overlay wow fadeInDown" data-wow-delay="0.2s">
-              <h2>
-                Mental health is not a destination, but a process of growth and
-                self-care.
-              </h2>
-            </div>
-          </div>
+          ></div>
         </swiper-slide>
         <swiper-slide>
           <div
             class="slide-content"
             :style="{ backgroundImage: `url(${slide2})` }"
-          >
-            <div class="overlay wow fadeInDown" data-wow-delay="0.2s">
-              <h2>
-                Taking care of your mind is just as important as taking care of
-                your body.
-              </h2>
-            </div>
-          </div>
+          ></div>
         </swiper-slide>
       </swiper>
     </div>
