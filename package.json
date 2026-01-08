@@ -2,10 +2,19 @@
   "name": "wellness_app",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+  "description": "This template should help get you started developing with Vue 3 in Vite.",
+  "homepage": "https://github.com/Raxxit/Wellness-app#readme",
+  "bugs": {
+    "url": "https://github.com/Raxxit/Wellness-app/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raxxit/Wellness-app.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "vite.config.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -25,16 +34,7 @@
     "vite": "^7.3.0",
     "vite-plugin-vue-devtools": "^8.0.5"
   },
-  "description": "This template should help get you started developing with Vue 3 in Vite.",
-  "main": "vite.config.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Raxxit/Wellness-app.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Raxxit/Wellness-app/issues"
-  },
-  "homepage": "https://github.com/Raxxit/Wellness-app#readme"
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
 }
