@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { WOW } from 'wowjs';
+import axios from 'axios';
 
 import registrationBg from '@/assets/img/3.jpg';
 
@@ -15,15 +16,14 @@ const formData = ref({
 
 const handleSubmit = async () => {
   const data = new FormData();
+
   data.append('username', formData.value.username);
   data.append('email', formData.value.email);
   data.append('age', formData.value.age);
   data.append('gender', formData.value.gender);
   data.append('password', formData.value.password);
-
   try {
-    // 2. Send as Form Data
-    // Axios automatically sets header to 'multipart/form-data' or 'application/x-www-form-urlencoded'
+
     const response = await axios.post('http://127.0.0.1:5000/api/register', data);
 
     if (response.status === 200) {
