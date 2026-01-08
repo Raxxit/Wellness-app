@@ -38,6 +38,12 @@ const isNavOpen = ref(false);
               <li>
                 <RouterLink class="dropdown-item" to="/register">Register</RouterLink>
               </li>
+
+              <li>
+                <RouterLink class="dropdown-item" to="/questionnaire">questionnaire</RouterLink>
+              </li>
+
+
               <li>
                 <hr class="dropdown-divider">
               </li>
