@@ -23,6 +23,12 @@ const router = createRouter({
             component: QuestionnaireView
         },
 
+        {
+  path: '/register',
+  name: 'register',
+  component: () => import('../views/RegistrationView.vue')
+}
+
 
     ]
 })
