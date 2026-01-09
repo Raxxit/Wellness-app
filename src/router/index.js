@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
 import login from '@/views/login.vue' 
-import tracker from '@/views/tracker.vue' 
+
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,11 +24,7 @@ const router = createRouter({
             component: login
         },
 
-        {
-            path: '/tracker',
-            name: 'tracker',
-            component: tracker
-        },
+    
 
 
     ]
