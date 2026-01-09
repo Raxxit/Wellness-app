@@ -1,10 +1,12 @@
 <script setup>
 import { onMounted } from "vue";
-import { WOW } from "wowjs";
+import * as wowModule from "wowjs";
+import "wowjs/css/libs/animate.css";
 
 import aboutImage from "@/assets/img/4.jpg";
 
 onMounted(() => {
+  const WOW = wowModule.WOW || wowModule.default.WOW;
   new WOW().init();
 });
 </script>
@@ -13,10 +15,7 @@ onMounted(() => {
   <div class="about-page">
     <header class="py-5 bg-light border-bottom">
       <div class="container text-center">
-        <h1
-          class="display-4 fw-bold text-primary wow fadeInUp"
-          data-wow-delay="0.1s"
-        >
+        <h1 class="display-4 fw-bold text-primary wow fadeInUp" data-wow-delay="0.1s">
           About Us
         </h1>
         <p class="lead text-secondary wow fadeInUp" data-wow-delay="0.2s">
@@ -28,25 +27,16 @@ onMounted(() => {
     <section class="py-5">
       <div class="container">
         <div class="row align-items-center">
-          <div
-            class="col-12 col-md-6 mb-4 mb-md-0 wow fadeInLeft"
-            data-wow-delay="0.3s"
-          >
+          <div class="col-12 col-md-6 mb-4 mb-md-0 wow fadeInLeft" data-wow-delay="0.3s">
             <div class="image-wrapper shadow rounded overflow-hidden">
-              <img
-                :src="aboutImage"
-                alt="About our mental wellness platform"
-                class="img-fluid"
-              />
+              <img :src="aboutImage" alt="About our mental wellness platform" class="img-fluid" />
             </div>
           </div>
 
           <div class="col-12 col-md-6 wow fadeInRight" data-wow-delay="0.4s">
             <p class="text-muted">
               Founded in 2024, WellnessApp was created with a simple belief:
-              <strong
-                >Mental well-being should be accessible to everyone.</strong
-              >
+              <strong>Mental well-being should be accessible to everyone.</strong>
             </p>
 
             <p class="text-muted">

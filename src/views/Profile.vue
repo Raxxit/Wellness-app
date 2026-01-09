@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { WOW } from "wowjs";
+import * as wowModule from "wowjs";
+import "wowjs/css/libs/animate.css";
 import axios from "axios";
 
 // Profile data
@@ -68,10 +69,11 @@ const handleSubmit = async () => {
   }
 };
 
-// Initialize WOW.js
 onMounted(() => {
-  new WOW({ mobile: false }).init();
+  const WOW = wowModule.WOW || wowModule.default.WOW;
+  new WOW().init();
 });
+
 </script>
 
 <template>
@@ -91,24 +93,13 @@ onMounted(() => {
       <div class="container">
         <div class="row g-4 align-items-start">
           <!-- Profile Picture -->
-          <div
-            class="col-12 col-md-4 wow fadeInLeft d-flex justify-content-center"
-          >
+          <div class="col-12 col-md-4 wow fadeInLeft d-flex justify-content-center">
             <div class="card profile-card text-center p-4">
-              <img
-                :src="profileImage"
-                alt="User profile picture"
-                class="avatar"
-              />
+              <img :src="profileImage" alt="User profile picture" class="avatar" />
 
               <label class="btn btn-outline-primary mt-3">
                 <i class="fa fa-camera me-2"></i>Change Photo
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  @change="onImageChange"
-                />
+                <input type="file" hidden accept="image/*" @change="onImageChange" />
               </label>
 
               <small v-if="imageError" class="text-danger d-block mt-2">
@@ -121,9 +112,7 @@ onMounted(() => {
           </div>
 
           <!-- Profile Form -->
-          <div
-            class="col-12 col-md-8 wow fadeInRight d-flex justify-content-center"
-          >
+          <div class="col-12 col-md-8 wow fadeInRight d-flex justify-content-center">
             <div class="card profile-form-card w-100">
               <div class="card-body p-4 p-md-5">
                 <h2>Personal Information</h2>
@@ -135,31 +124,18 @@ onMounted(() => {
                   <div class="row">
                     <div class="col-md-6 mb-3">
                       <label class="form-label">First Name</label>
-                      <input
-                        class="form-control"
-                        v-model="profile.firstName"
-                        required
-                      />
+                      <input class="form-control" v-model="profile.firstName" required />
                     </div>
 
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Last Name</label>
-                      <input
-                        class="form-control"
-                        v-model="profile.lastName"
-                        required
-                      />
+                      <input class="form-control" v-model="profile.lastName" required />
                     </div>
                   </div>
 
                   <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input
-                      type="email"
-                      class="form-control"
-                      v-model="profile.email"
-                      required
-                    />
+                    <input type="email" class="form-control" v-model="profile.email" required />
                   </div>
 
                   <div class="mb-3">
@@ -174,11 +150,7 @@ onMounted(() => {
 
                   <div class="mb-4">
                     <label class="form-label">About You</label>
-                    <textarea
-                      class="form-control"
-                      rows="4"
-                      v-model="profile.bio"
-                    ></textarea>
+                    <textarea class="form-control" rows="4" v-model="profile.bio"></textarea>
                   </div>
 
                   <!-- Feedback -->
@@ -189,11 +161,7 @@ onMounted(() => {
                     {{ errorMessage }}
                   </p>
 
-                  <button
-                    type="submit"
-                    class="btn btn-primary w-100"
-                    :disabled="isSaving"
-                  >
+                  <button type="submit" class="btn btn-primary w-100" :disabled="isSaving">
                     <span v-if="isSaving">Saving...</span>
                     <span v-else>Save Changes</span>
                   </button>

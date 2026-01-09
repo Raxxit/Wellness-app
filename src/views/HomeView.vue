@@ -7,10 +7,14 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+
 import slide1 from "@/assets/img/1.png";
 import slide2 from "@/assets/img/3.png";
 
-import { WOW } from "wowjs";
+
+import * as wowModule from "wowjs";
+import "wowjs/css/libs/animate.css";
+
 
 const modules = [Navigation, Pagination, Autoplay];
 
@@ -30,6 +34,7 @@ const services = [
 ];
 
 onMounted(() => {
+  const WOW = wowModule.WOW || wowModule.default.WOW;
   new WOW().init();
 });
 </script>
@@ -37,25 +42,13 @@ onMounted(() => {
 <template>
   <div class="home">
     <div class="slider-container mb-5">
-      <swiper
-        :modules="modules"
-        :slides-per-view="1"
-        navigation
-        :pagination="{ clickable: true }"
-        :autoplay="{ delay: 5000 }"
-        class="my-swiper"
-      >
+      <swiper :modules="modules" :slides-per-view="1" navigation :pagination="{ clickable: true }"
+        :autoplay="{ delay: 5000 }" class="my-swiper">
         <swiper-slide>
-          <div
-            class="slide-content"
-            :style="{ backgroundImage: `url(${slide1})` }"
-          ></div>
+          <div class="slide-content" :style="{ backgroundImage: `url(${slide1})` }"></div>
         </swiper-slide>
         <swiper-slide>
-          <div
-            class="slide-content"
-            :style="{ backgroundImage: `url(${slide2})` }"
-          ></div>
+          <div class="slide-content" :style="{ backgroundImage: `url(${slide2})` }"></div>
         </swiper-slide>
       </swiper>
     </div>
@@ -73,12 +66,8 @@ onMounted(() => {
     <section class="services-section py-5">
       <div class="container">
         <div class="row">
-          <div
-            class="col-md-4 text-center mb-4 wow fadeInLeft"
-            data-wow-delay="0.4s"
-            v-for="service in services"
-            :key="service.title"
-          >
+          <div class="col-md-4 text-center mb-4 wow fadeInLeft" data-wow-delay="0.4s" v-for="service in services"
+            :key="service.title">
             <div class="p-4 border rounded shadow-sm h-100 bg-white">
               <h3>{{ service.title }}</h3>
               <p>{{ service.desc }}</p>
