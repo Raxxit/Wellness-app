@@ -1,12 +1,16 @@
 from flask import Flask
+import os
 from .extensions import db, cors
 
 def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SECRET_KEY'] = 'your-secret-key-here'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wellness.db'
+    app.config['SECRET_KEY'] = 'your-super-secret-key-change-this'
+    
+    # Use relative path for SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/wellness.db'
+    
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize Extensions
@@ -18,8 +22,8 @@ def create_app():
     
     app.register_blueprint(auth_bp, url_prefix='/api')
 
-    # Create Database Tables if they don't exist
-    with app.app_context():
-        db.create_all()
+    # Skip db.create_all() if it causes issues
+    # with app.app_context():
+    #     db.create_all()
 
     return app

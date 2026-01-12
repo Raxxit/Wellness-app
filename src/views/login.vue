@@ -131,8 +131,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const form = reactive({
   email: '',
@@ -141,130 +142,36 @@ const form = reactive({
 
 const loading = ref(false)
 const errorMessage = ref('')
-const rememberMe = ref(false)
-const showPassword = ref(false)
 const router = useRouter()
-
-
-const API_URL = 'http://localhost:5000' 
 
 const handleLogin = async () => {
   errorMessage.value = ''
-  
-  if (!form.email.trim()) {
-    errorMessage.value = 'Please enter your email address'
-    return
-  }
-  
-  if (!form.password) {
-    errorMessage.value = 'Please enter your password'
-    return
-  }
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(form.email)) {
-    errorMessage.value = 'Please enter a valid email address'
-    return
-  }
-  
   loading.value = true
   
   try {
-    const response = await fetch(`${API_URL}/api/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: form.email,
-        password: form.password
-      }),
-      credentials: 'include' 
+    const response = await axios.post('http://127.0.0.1:5000/api/login', {
+      email: form.email,
+      password: form.password
     })
     
-    const data = await response.json()
-    
-    if (response.ok && data.success) {
-      if (data.token) {
-        localStorage.setItem('auth_token', data.token)
-      }
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
       
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-      }
-      
-      localStorage.setItem('isLoggedIn', 'true')
-      localStorage.setItem('lastLogin', new Date().toISOString())
-      
-      if (rememberMe.value) {
-        localStorage.setItem('rememberedEmail', form.email)
-      } else {
-        localStorage.removeItem('rememberedEmail')
-      }
-      
-      console.log('Login successful!', data.user)
-      
-      
-      router.push('/dashboard')
-      
-    } else {
-      if (data.error === 'user_not_found') {
-        errorMessage.value = 'No account found with this email address.'
-      } else if (data.error === 'invalid_password') {
-        errorMessage.value = 'Incorrect password. Please try again.'
-      } else if (data.error === 'account_disabled') {
-        errorMessage.value = 'This account has been disabled. Please contact support.'
-      } else {
-        errorMessage.value = data.message || 'Login failed. Please check your credentials.'
-      }
+      router.push('/Profile')
     }
-    
   } catch (error) {
-    console.error('Login error:', error)
-    
-    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-      errorMessage.value = 'Unable to connect to server. Please check if the backend is running.'
+    if (error.response?.data?.message) {
+      errorMessage.value = error.response.data.message
     } else {
-      errorMessage.value = 'An unexpected error occurred. Please try again.'
+      errorMessage.value = 'Login failed. Please try again.'
     }
   } finally {
     loading.value = false
   }
 }
-
-const checkRememberedEmail = () => {
-  const rememberedEmail = localStorage.getItem('rememberedEmail')
-  if (rememberedEmail) {
-    form.email = rememberedEmail
-    rememberMe.value = true
-  }
-}
-
-const checkExistingSession = () => {
-  const isLoggedIn = localStorage.getItem('isLoggedIn')
-  const lastLogin = localStorage.getItem('lastLogin')
-  
-  if (isLoggedIn === 'true' && lastLogin) {
-    const lastLoginDate = new Date(lastLogin)
-    const now = new Date()
-    const hoursDiff = (now - lastLoginDate) / (1000 * 60 * 60)
-    
-    if (hoursDiff < 24) {
-      console.log('Existing session found')
-    }
-  }
-}
-
-const clearErrors = () => {
-  errorMessage.value = ''
-}
-
-onMounted(() => {
-  checkRememberedEmail()
-  checkExistingSession()
-  clearErrors()
-})
 </script>
+
 
 <style scoped>
 .login-wrapper {
