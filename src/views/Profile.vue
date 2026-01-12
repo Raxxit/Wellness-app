@@ -1,22 +1,174 @@
+<script setup>
+import { ref, onMounted, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { WOW } from "wowjs";
+import "wowjs/css/libs/animate.css";
+
+const router = useRouter();
+
+
+const user = ref({
+  username: '',
+  email: '',
+  age: null,
+  gender: null
+});
+
+const formData = reactive({
+  username: '',
+  age: '',
+  gender: '',
+  password: ''
+});
+
+const isSaving = ref(false);
+const isLoading = ref(true);
+const successMessage = ref("");
+const errorMessage = ref("");
+const showPassword = ref(false);
+
+const getGenderText = (genderCode) => {
+  const genderMap = {
+    1: 'Male',
+    2: 'Female',
+    3: 'Other',
+    0: 'Prefer not to say'
+  };
+  return genderMap[genderCode] || 'Not specified';
+};
+
+onMounted(async () => {
+  new WOW({ mobile: false }).init();
+  await fetchUserProfile();
+});
+
+const fetchUserProfile = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    const response = await fetch('http://127.0.0.1:5000/api/profile', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        user.value = data.user;
+        
+        // Update form data
+        formData.username = data.user.username || '';
+        formData.age = data.user.age || '';
+        formData.gender = data.user.gender || '';
+      } else {
+        errorMessage.value = data.message || "Failed to load profile.";
+        setTimeout(() => router.push('/login'), 2000);
+      }
+    } else {
+      errorMessage.value = "Failed to load profile. Please login again.";
+      setTimeout(() => router.push('/login'), 2000);
+    }
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    errorMessage.value = "Cannot connect to server. Please start the Flask backend.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const handleSubmit = async () => {
+  isSaving.value = true;
+  successMessage.value = "";
+  errorMessage.value = "";
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      errorMessage.value = "You need to be logged in to update profile.";
+      isSaving.value = false;
+      return;
+    }
+
+    const updateData = {
+      username: formData.username,
+      age: formData.age ? parseInt(formData.age) : null,
+      gender: formData.gender ? parseInt(formData.gender) : null
+    };
+
+    if (formData.password.trim()) {
+      updateData.password = formData.password;
+    }
+
+    const response = await fetch('http://127.0.0.1:5000/api/profile/update', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updateData)
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      successMessage.value = "Profile updated successfully!";
+      user.value = data.user;
+      localStorage.setItem('user', JSON.stringify(data.user));
+      formData.password = '';
+      
+      setTimeout(() => {
+        successMessage.value = "";
+      }, 3000);
+    } else {
+      errorMessage.value = data.message || "Failed to update profile.";
+    }
+  } catch (error) {
+    console.error("Update error:", error);
+    errorMessage.value = "Cannot connect to server. Please check if Flask backend is running.";
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      await fetch('http://127.0.0.1:5000/api/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Logout error:", error);
+  } finally {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    router.push('/login');
+  }
+};
+</script>
+
 <template>
   <div class="profile-page">
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Loading your profile...</p>
+      <p>Loading profile...</p>
     </div>
 
-    <!-- Not Logged In State -->
-    <div v-else-if="!isAuthenticated" class="not-logged-in">
-      <div class="lock-icon">🔒</div>
-      <h2>Authentication Required</h2>
-      <p>You need to be logged in to view your profile.</p>
-      <button @click="redirectToLogin" class="login-button">
-        Go to Login
-      </button>
-    </div>
-
-    <!-- Profile Content (only shown when logged in) -->
+    <!-- Profile Content -->
     <div v-else class="profile-container">
       <!-- Header -->
       <div class="profile-header wow fadeIn">
@@ -24,32 +176,16 @@
           <div class="avatar-section">
             <div class="avatar-wrapper">
               <img 
-                :src="profileImage" 
-                alt="Profile Picture" 
+                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(user.username || 'User')}&background=667eea&color=fff`"
+                :alt="user.username || 'User'"
                 class="profile-avatar"
               />
-              <input 
-                type="file" 
-                ref="fileInput" 
-                @change="onImageChange" 
-                accept="image/*"
-                class="file-input"
-                hidden
-              />
-              <button @click="triggerFileInput" class="change-photo-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                Change Photo
-              </button>
             </div>
           </div>
           
           <div class="user-info">
-            <h1>{{ fullName }}</h1>
-            <p class="user-email">{{ user.email }}</p>
+            <h1>{{ user.username || 'User' }}</h1>
+            <p class="user-email">{{ user.email || 'No email' }}</p>
             <div class="user-meta">
               <span v-if="user.age" class="meta-item">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -63,15 +199,7 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                {{ user.gender === 1 ? 'Male' : user.gender === 2 ? 'Female' : 'Other' }}
-              </span>
-              <span class="meta-item">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="3" y1="9" x2="21" y2="9"></line>
-                  <line x1="9" y1="21" x2="9" y2="9"></line>
-                </svg>
-                Member since {{ joinDate }}
+                {{ getGenderText(user.gender) }}
               </span>
             </div>
           </div>
@@ -104,80 +232,81 @@
             {{ errorMessage }}
           </div>
 
-          <div v-if="imageError" class="alert alert-warning">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            {{ imageError }}
-          </div>
-
           <form @submit.prevent="handleSubmit" class="profile-form">
             <div class="form-grid">
+              <!-- Username Field -->
               <div class="form-group">
-                <label for="firstName">First Name</label>
+                <label for="username">Username</label>
                 <input 
-                  id="firstName" 
-                  v-model="profile.firstName" 
+                  id="username" 
+                  v-model="formData.username" 
                   type="text" 
-                  placeholder="Enter first name"
+                  placeholder="Enter username"
                   required
                 />
               </div>
 
-              <div class="form-group">
-                <label for="lastName">Last Name</label>
-                <input 
-                  id="lastName" 
-                  v-model="profile.lastName" 
-                  type="text" 
-                  placeholder="Enter last name"
-                  required
-                />
-              </div>
-
+              <!-- Email Field (read-only) -->
               <div class="form-group">
                 <label for="email">Email Address</label>
                 <input 
                   id="email" 
-                  v-model="profile.email" 
+                  :value="user.email" 
                   type="email" 
-                  placeholder="Enter email"
-                  required
+                  placeholder="Email"
                   disabled
                 />
                 <small class="hint">Email cannot be changed</small>
               </div>
 
+              <!-- Age Field -->
               <div class="form-group">
-                <label for="phone">Phone Number</label>
+                <label for="age">Age</label>
                 <input 
-                  id="phone" 
-                  v-model="profile.phone" 
-                  type="tel" 
-                  placeholder="Enter phone number"
+                  id="age" 
+                  v-model="formData.age" 
+                  type="number" 
+                  min="1" 
+                  max="120"
+                  placeholder="Enter age"
                 />
               </div>
 
+              <!-- Gender Field -->
               <div class="form-group">
-                <label for="city">City</label>
-                <input 
-                  id="city" 
-                  v-model="profile.city" 
-                  type="text" 
-                  placeholder="Enter your city"
-                />
+                <label for="gender">Gender</label>
+                <select 
+                  id="gender" 
+                  v-model="formData.gender"
+                  class="form-select"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="1">Male</option>
+                  <option value="2">Female</option>
+                  <option value="3">Other</option>
+                  <option value="0">Prefer not to say</option>
+                </select>
               </div>
 
+              <!-- Password Field -->
               <div class="form-group full-width">
-                <label for="bio">Bio</label>
-                <textarea 
-                  id="bio" 
-                  v-model="profile.bio" 
-                  placeholder="Tell us about yourself..."
-                  rows="4"
-                ></textarea>
+                <label for="password">Change Password (Optional)</label>
+                <div class="password-input-wrapper">
+                  <input 
+                    id="password" 
+                    v-model="formData.password" 
+                    :type="showPassword ? 'text' : 'password'"
+                    placeholder="Enter new password"
+                  />
+                  <button 
+                    type="button" 
+                    @click="showPassword = !showPassword"
+                    class="password-toggle"
+                  >
+                    {{ showPassword ? 'Hide' : 'Show' }}
+                  </button>
+                </div>
+                <small class="hint">Leave blank to keep current password</small>
               </div>
             </div>
 
@@ -218,26 +347,22 @@
           </form>
         </div>
 
-        <!-- Session Info Card -->
-        <div class="session-card wow fadeInUp" data-wow-delay="0.2s">
+        <!-- Account Info Card -->
+        <div class="info-card wow fadeInUp" data-wow-delay="0.2s">
           <div class="card-header">
-            <h2>Session Information</h2>
+            <h2>Account Information</h2>
           </div>
-          <div class="session-info">
-            <div class="info-item">
-              <span class="info-label">Logged in as:</span>
-              <span class="info-value">{{ user.username || user.email }}</span>
-            </div>
+          <div class="account-info">
             <div class="info-item">
               <span class="info-label">User ID:</span>
-              <span class="info-value">{{ user.id }}</span>
+              <span class="info-value">{{ user.id || 'N/A' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Session Started:</span>
-              <span class="info-value">{{ sessionStartTime }}</span>
+              <span class="info-label">Email:</span>
+              <span class="info-value">{{ user.email || 'No email' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Status:</span>
+              <span class="info-label">Account Status:</span>
               <span class="status-badge active">Active</span>
             </div>
           </div>
@@ -247,306 +372,6 @@
   </div>
 </template>
 
-<script setup>
-<<<<<<< HEAD
-import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
-import { WOW } from "wowjs";
-=======
-import { ref, onMounted } from "vue";
-import * as wowModule from "wowjs";
-import "wowjs/css/libs/animate.css";
->>>>>>> daa3b6b3e8dd9a4bfbb93312c1334ae9cb42f0a3
-import axios from "axios";
-import "wowjs/css/libs/animate.css";
-
-const router = useRouter();
-
-const user = ref({
-  id: null,
-  username: "",
-  email: "",
-  age: null,
-  gender: null
-});
-
-const isAuthenticated = ref(false);
-const isLoading = ref(true);
-
-const profile = ref({
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  city: "",
-  bio: "",
-});
-
-const profileImage = ref("/profile-placeholder.webp");
-const imageError = ref("");
-const fileInput = ref(null);
-const isSaving = ref(false);
-const successMessage = ref("");
-const errorMessage = ref("");
-const sessionStartTime = ref("");
-const fullName = computed(() => {
-  return `${profile.value.firstName} ${profile.value.lastName}`.trim() || user.value.username;
-});
-
-const joinDate = computed(() => {
-  return new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-});
-
-onMounted(async () => {
-  await checkAuth();
-  new WOW({ mobile: false }).init();
-});
-
-const checkAuth = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      isAuthenticated.value = false;
-      isLoading.value = false;
-      return;
-    }
-
-    const response = await axios.get('http://127.0.0.1:5000/api/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (response.data.success) {
-      user.value = response.data.user;
-      isAuthenticated.value = true;
-      profile.value.email = user.value.email;
-      
-      sessionStartTime.value = new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } else {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      isAuthenticated.value = false;
-    }
-  } catch (error) {
-    console.error("Auth check failed:", error);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    isAuthenticated.value = false;
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const redirectToLogin = () => {
-  router.push('/login');
-};
-
-const onImageChange = (event) => {
-  const file = event.target.files[0];
-  imageError.value = "";
-
-  if (!file) return;
-
-  if (!file.type.startsWith("image/")) {
-    imageError.value = "Please upload a valid image file.";
-    return;
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    imageError.value = "Image must be under 2MB.";
-    return;
-  }
-
-  profileImage.value = URL.createObjectURL(file);
-};
-
-const triggerFileInput = () => {
-  fileInput.value.click();
-};
-
-const handleSubmit = async () => {
-  isSaving.value = true;
-  successMessage.value = "";
-  errorMessage.value = "";
-
-  try {
-    const token = localStorage.getItem('token');
-    const data = new FormData();
-    
-    Object.entries(profile.value).forEach(([key, value]) => {
-      data.append(key, value);
-    });
-
-    await axios.post(
-      'http://127.0.0.1:5000/api/update-profile',
-      data,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    );
-
-    successMessage.value = "Profile updated successfully.";
-    
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
-    
-  } catch (error) {
-    console.error(error);
-    errorMessage.value = "Something went wrong while updating your profile.";
-    
-    if (error.response && error.response.status === 401) {
-      errorMessage.value = "Session expired. Please login again.";
-      setTimeout(() => {
-        handleLogout();
-      }, 2000);
-    }
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-<<<<<<< HEAD
-const handleLogout = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      await axios.post('http://127.0.0.1:5000/api/logout', {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-    }
-  } catch (error) {
-    console.error("Logout error:", error);
-  } finally {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
-  }
-};
-</script>
-
-=======
-onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
-  new WOW().init();
-});
-
-</script>
-
-<template>
-  <div class="edit-profile-page">
-    <!-- Header -->
-    <header class="page-header">
-      <div class="container text-center">
-        <h1 class="wow fadeInUp">Edit Profile</h1>
-        <p class="wow fadeInUp" data-wow-delay="0.1s">
-          Keep your information accurate and up to date
-        </p>
-      </div>
-    </header>
-
-    <!-- Profile Section -->
-    <section class="py-5">
-      <div class="container">
-        <div class="row g-4 align-items-start">
-          <!-- Profile Picture -->
-          <div class="col-12 col-md-4 wow fadeInLeft d-flex justify-content-center">
-            <div class="card profile-card text-center p-4">
-              <img :src="profileImage" alt="User profile picture" class="avatar" />
-
-              <label class="btn btn-outline-primary mt-3">
-                <i class="fa fa-camera me-2"></i>Change Photo
-                <input type="file" hidden accept="image/*" @change="onImageChange" />
-              </label>
-
-              <small v-if="imageError" class="text-danger d-block mt-2">
-                {{ imageError }}
-              </small>
-              <small v-else class="text-muted d-block mt-2">
-                JPG / PNG / WEBP · Max 2MB
-              </small>
-            </div>
-          </div>
-
-          <!-- Profile Form -->
-          <div class="col-12 col-md-8 wow fadeInRight d-flex justify-content-center">
-            <div class="card profile-form-card w-100">
-              <div class="card-body p-4 p-md-5">
-                <h2>Personal Information</h2>
-                <p class="text-muted mb-4">
-                  This information will be visible on your profile
-                </p>
-
-                <form @submit.prevent="handleSubmit">
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">First Name</label>
-                      <input class="form-control" v-model="profile.firstName" required />
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Last Name</label>
-                      <input class="form-control" v-model="profile.lastName" required />
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" v-model="profile.email" required />
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">Phone</label>
-                    <input class="form-control" v-model="profile.phone" />
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">City</label>
-                    <input class="form-control" v-model="profile.city" />
-                  </div>
-
-                  <div class="mb-4">
-                    <label class="form-label">About You</label>
-                    <textarea class="form-control" rows="4" v-model="profile.bio"></textarea>
-                  </div>
-
-                  <!-- Feedback -->
-                  <p v-if="successMessage" class="text-success">
-                    {{ successMessage }}
-                  </p>
-                  <p v-if="errorMessage" class="text-danger">
-                    {{ errorMessage }}
-                  </p>
-
-                  <button type="submit" class="btn btn-primary w-100" :disabled="isSaving">
-                    <span v-if="isSaving">Saving...</span>
-                    <span v-else>Save Changes</span>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-</template>
-
->>>>>>> daa3b6b3e8dd9a4bfbb93312c1334ae9cb42f0a3
 <style scoped>
 .profile-page {
   min-height: 100vh;
@@ -573,50 +398,10 @@ onMounted(() => {
   animation: spin 1s linear infinite;
 }
 
-/* Not Logged In State */
-.not-logged-in {
-  text-align: center;
-  padding: 60px 20px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  margin: 40px auto;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.not-logged-in .lock-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
-}
-
-.not-logged-in h2 {
-  color: #2d3748;
-  margin-bottom: 10px;
-}
-
-.not-logged-in p {
-  color: #718096;
-  margin-bottom: 30px;
-}
-
-.login-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.login-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-}
-
-/* Profile Container */
 .profile-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -647,28 +432,7 @@ onMounted(() => {
   border-radius: 50%;
   border: 4px solid white;
   object-fit: cover;
-}
-
-.change-photo-btn {
-  position: absolute;
-  bottom: 0;
-  right: 0;
   background: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  color: #667eea;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.3s;
-}
-
-.change-photo-btn:hover {
-  background: #f8fafc;
-  transform: translateY(-2px);
 }
 
 .user-info h1 {
@@ -679,11 +443,12 @@ onMounted(() => {
 .user-email {
   opacity: 0.9;
   margin-bottom: 15px;
+  font-size: 18px;
 }
 
 .user-meta {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   flex-wrap: wrap;
 }
 
@@ -693,6 +458,9 @@ onMounted(() => {
   gap: 8px;
   font-size: 14px;
   opacity: 0.9;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
 }
 
 /* Profile Content */
@@ -702,7 +470,7 @@ onMounted(() => {
   gap: 30px;
 }
 
-.profile-card, .session-card {
+.profile-card, .info-card {
   background: white;
   border-radius: 16px;
   padding: 30px;
@@ -716,10 +484,12 @@ onMounted(() => {
 .card-header h2 {
   color: #2d3748;
   margin-bottom: 5px;
+  font-size: 24px;
 }
 
 .card-header p {
   color: #718096;
+  font-size: 14px;
 }
 
 /* Alerts */
@@ -730,6 +500,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  font-size: 14px;
 }
 
 .alert-success {
@@ -742,12 +513,6 @@ onMounted(() => {
   background: #fff5f5;
   color: #c53030;
   border: 1px solid #fed7d7;
-}
-
-.alert-warning {
-  background: #fffaf0;
-  color: #c05621;
-  border: 1px solid #feebc8;
 }
 
 /* Form */
@@ -774,7 +539,7 @@ onMounted(() => {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group select {
   width: 100%;
   padding: 12px 16px;
   border: 2px solid #e2e8f0;
@@ -784,7 +549,7 @@ onMounted(() => {
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group select:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -793,6 +558,35 @@ onMounted(() => {
 .form-group input:disabled {
   background: #f8fafc;
   cursor: not-allowed;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  padding-right: 70px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
 }
 
 .hint {
@@ -826,6 +620,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
+  flex: 2;
 }
 
 .save-btn:hover:not(:disabled) {
@@ -861,14 +656,15 @@ onMounted(() => {
   background: #fff5f5;
   color: #c53030;
   border: 2px solid #fed7d7;
+  flex: 1;
 }
 
 .logout-btn:hover {
   background: #fed7d7;
 }
 
-/* Session Card */
-.session-info {
+/* Account Info */
+.account-info {
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -894,6 +690,8 @@ onMounted(() => {
 .info-value {
   color: #2d3748;
   font-weight: 500;
+  font-size: 14px;
+  text-align: right;
 }
 
 .status-badge {
@@ -908,16 +706,12 @@ onMounted(() => {
   color: #276749;
 }
 
-/* Animations */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
     text-align: center;
+    gap: 20px;
   }
   
   .profile-content {
@@ -930,6 +724,11 @@ onMounted(() => {
   
   .form-actions {
     flex-direction: column;
+  }
+  
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
   }
 }
 </style>
