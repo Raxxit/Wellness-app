@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { WOW } from 'wowjs';
 import axios from 'axios';
 
-import registrationBg from '@/assets/img/3.jpg';
+import registrationBg from '@/assets/img/3.png';
 
 const formData = ref({
   username: '',
