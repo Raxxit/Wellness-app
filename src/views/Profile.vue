@@ -256,7 +256,6 @@ import "wowjs/css/libs/animate.css";
 
 const router = useRouter();
 
-// User data from session
 const user = ref({
   id: null,
   username: "",
@@ -265,11 +264,9 @@ const user = ref({
   gender: null
 });
 
-// Authentication state
 const isAuthenticated = ref(false);
 const isLoading = ref(true);
 
-// Profile data
 const profile = ref({
   firstName: "",
   lastName: "",
@@ -279,20 +276,13 @@ const profile = ref({
   bio: "",
 });
 
-// Profile picture and errors
 const profileImage = ref("/profile-placeholder.webp");
 const imageError = ref("");
 const fileInput = ref(null);
-
-// Loading & feedback states
 const isSaving = ref(false);
 const successMessage = ref("");
 const errorMessage = ref("");
-
-// Session info
 const sessionStartTime = ref("");
-
-// Computed properties
 const fullName = computed(() => {
   return `${profile.value.firstName} ${profile.value.lastName}`.trim() || user.value.username;
 });
@@ -305,13 +295,11 @@ const joinDate = computed(() => {
   });
 });
 
-// Check authentication on component mount
 onMounted(async () => {
   await checkAuth();
   new WOW({ mobile: false }).init();
 });
 
-// Check if user is authenticated
 const checkAuth = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -322,7 +310,6 @@ const checkAuth = async () => {
       return;
     }
 
-    // Try to get user profile from backend
     const response = await axios.get('http://127.0.0.1:5000/api/profile', {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -332,11 +319,8 @@ const checkAuth = async () => {
     if (response.data.success) {
       user.value = response.data.user;
       isAuthenticated.value = true;
-      
-      // Set profile email from user data
       profile.value.email = user.value.email;
       
-      // Set session start time
       sessionStartTime.value = new Date().toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
@@ -356,12 +340,10 @@ const checkAuth = async () => {
   }
 };
 
-// Redirect to login
 const redirectToLogin = () => {
   router.push('/login');
 };
 
-// Handle profile image change
 const onImageChange = (event) => {
   const file = event.target.files[0];
   imageError.value = "";
@@ -385,7 +367,6 @@ const triggerFileInput = () => {
   fileInput.value.click();
 };
 
-// Form submission
 const handleSubmit = async () => {
   isSaving.value = true;
   successMessage.value = "";
@@ -411,7 +392,6 @@ const handleSubmit = async () => {
 
     successMessage.value = "Profile updated successfully.";
     
-    // Hide success message after 3 seconds
     setTimeout(() => {
       successMessage.value = "";
     }, 3000);
@@ -431,7 +411,6 @@ const handleSubmit = async () => {
   }
 };
 
-// Handle logout
 const handleLogout = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -446,11 +425,8 @@ const handleLogout = async () => {
   } catch (error) {
     console.error("Logout error:", error);
   } finally {
-    // Clear local storage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
-    // Redirect to login
     router.push('/login');
   }
 };
