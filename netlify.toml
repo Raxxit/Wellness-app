@@ -11,6 +11,6 @@
 # This proxies API requests to your Backend
 [[redirects]]
   from = "/*"
-  to = "https://DummyMaster.pythonanywhere.com/api/:splat"
+  to = "https://dummymaster.pythonanywhere.com/api/:splat"
   status = 200
   force = true
