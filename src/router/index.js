@@ -3,7 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
 import QuestionnaireView from '@/views/questionnaireView.vue'
 import Profile from '@/views/Profile.vue'
-import login from '@/views/login.vue' 
+import login from '@/views/login.vue'
 
 
 const router = createRouter({
@@ -36,14 +36,14 @@ const router = createRouter({
             path: '/profile',
             name: 'Profile',
             component: () => import('../views/Profile.vue')
-        }
+        },
         {
             path: '/login',
             name: 'login',
             component: login
         },
 
-    
+
 
 
     ]

@@ -11,12 +11,11 @@ def create_app():
 
     # Initialize Extensions
     db.init_app(app)
-    cors.init_app(app) # Allow Vue to talk to Flask
+    cors.init_app(app)
 
     # Import and Register Blueprints
     from .auth import auth_bp
     
-    # Note: We use /api prefix so Vue knows these are data requests, not pages
     app.register_blueprint(auth_bp, url_prefix='/api')
 
     # Create Database Tables if they don't exist
