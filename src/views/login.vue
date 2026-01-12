@@ -131,7 +131,8 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 const form = reactive({
   email: '',
@@ -142,6 +143,10 @@ const loading = ref(false)
 const errorMessage = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
+const router = useRouter()
+
+
+const API_URL = 'http://localhost:5000' 
 
 const handleLogin = async () => {
   errorMessage.value = ''
@@ -165,22 +170,100 @@ const handleLogin = async () => {
   loading.value = true
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const response = await fetch(`${API_URL}/api/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password
+      }),
+      credentials: 'include' 
+    })
     
-    // Demo success
-    alert(`Welcome to Wellness, ${form.email.split('@')[0]}!`)
+    const data = await response.json()
     
-    // Reset form on success
-    form.email = ''
-    form.password = ''
+    if (response.ok && data.success) {
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token)
+      }
+      
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+      
+      localStorage.setItem('isLoggedIn', 'true')
+      localStorage.setItem('lastLogin', new Date().toISOString())
+      
+      if (rememberMe.value) {
+        localStorage.setItem('rememberedEmail', form.email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
+      
+      console.log('Login successful!', data.user)
+      
+      
+      router.push('/dashboard')
+      
+    } else {
+      if (data.error === 'user_not_found') {
+        errorMessage.value = 'No account found with this email address.'
+      } else if (data.error === 'invalid_password') {
+        errorMessage.value = 'Incorrect password. Please try again.'
+      } else if (data.error === 'account_disabled') {
+        errorMessage.value = 'This account has been disabled. Please contact support.'
+      } else {
+        errorMessage.value = data.message || 'Login failed. Please check your credentials.'
+      }
+    }
     
   } catch (error) {
-    errorMessage.value = 'Invalid email or password. Please try again.'
+    console.error('Login error:', error)
+    
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      errorMessage.value = 'Unable to connect to server. Please check if the backend is running.'
+    } else {
+      errorMessage.value = 'An unexpected error occurred. Please try again.'
+    }
   } finally {
     loading.value = false
   }
 }
+
+const checkRememberedEmail = () => {
+  const rememberedEmail = localStorage.getItem('rememberedEmail')
+  if (rememberedEmail) {
+    form.email = rememberedEmail
+    rememberMe.value = true
+  }
+}
+
+const checkExistingSession = () => {
+  const isLoggedIn = localStorage.getItem('isLoggedIn')
+  const lastLogin = localStorage.getItem('lastLogin')
+  
+  if (isLoggedIn === 'true' && lastLogin) {
+    const lastLoginDate = new Date(lastLogin)
+    const now = new Date()
+    const hoursDiff = (now - lastLoginDate) / (1000 * 60 * 60)
+    
+    if (hoursDiff < 24) {
+      console.log('Existing session found')
+    }
+  }
+}
+
+const clearErrors = () => {
+  errorMessage.value = ''
+}
+
+onMounted(() => {
+  checkRememberedEmail()
+  checkExistingSession()
+  clearErrors()
+})
 </script>
 
 <style scoped>
