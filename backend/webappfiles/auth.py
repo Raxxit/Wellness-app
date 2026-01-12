@@ -8,7 +8,7 @@ from .models import User
 auth_bp = Blueprint('auth', __name__)
 
 # LOGIN ROUTE
-@auth_bp.route('/api/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
     try:
         data = request.get_json()
@@ -61,7 +61,7 @@ def login():
             "message": f"Login error: {str(e)}"
         }), 500
 
-@auth_bp.route('/api/health', methods=['GET'])
+@auth_bp.route('health', methods=['GET'])
 def health():
     return jsonify({
         "status": "healthy",
@@ -72,7 +72,7 @@ def health():
 
 
 
-@auth_bp.route('/api/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     username = request.form.get('username')
     email = request.form.get('email')

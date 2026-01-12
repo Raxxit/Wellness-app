@@ -2,15 +2,13 @@
   command = "npm run build"
   publish = "dist"
 
-# This handles Vue Router (prevents 404s on refresh)
 [[redirects]]
   from = "/api/*"
-  to = "/index.html"
-  status = 200
-
-# This proxies API requests to your Backend
-[[redirects]]
-  from = "/*"
   to = "https://dummymaster.pythonanywhere.com/api/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
