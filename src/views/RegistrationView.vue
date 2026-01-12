@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { WOW } from 'wowjs';
+import * as wowModule from "wowjs";
+import "wowjs/css/libs/animate.css";
 import axios from 'axios';
 
-import registrationBg from '@/assets/img/3.jpg';
+import registrationBg from '@/assets/img/3.png';
 
 const formData = ref({
   username: '',
@@ -36,9 +37,12 @@ const handleSubmit = async () => {
 };
 
 onMounted(() => {
+  const WOW = wowModule.WOW || wowModule.default.WOW;
   new WOW().init();
 });
+
 </script>
+
 
 <template>
   <div class="registration-page">

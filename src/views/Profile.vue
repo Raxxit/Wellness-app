@@ -248,9 +248,15 @@
 </template>
 
 <script setup>
+<<<<<<< HEAD
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { WOW } from "wowjs";
+=======
+import { ref, onMounted } from "vue";
+import * as wowModule from "wowjs";
+import "wowjs/css/libs/animate.css";
+>>>>>>> daa3b6b3e8dd9a4bfbb93312c1334ae9cb42f0a3
 import axios from "axios";
 import "wowjs/css/libs/animate.css";
 
@@ -411,6 +417,7 @@ const handleSubmit = async () => {
   }
 };
 
+<<<<<<< HEAD
 const handleLogout = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -432,6 +439,114 @@ const handleLogout = async () => {
 };
 </script>
 
+=======
+onMounted(() => {
+  const WOW = wowModule.WOW || wowModule.default.WOW;
+  new WOW().init();
+});
+
+</script>
+
+<template>
+  <div class="edit-profile-page">
+    <!-- Header -->
+    <header class="page-header">
+      <div class="container text-center">
+        <h1 class="wow fadeInUp">Edit Profile</h1>
+        <p class="wow fadeInUp" data-wow-delay="0.1s">
+          Keep your information accurate and up to date
+        </p>
+      </div>
+    </header>
+
+    <!-- Profile Section -->
+    <section class="py-5">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <!-- Profile Picture -->
+          <div class="col-12 col-md-4 wow fadeInLeft d-flex justify-content-center">
+            <div class="card profile-card text-center p-4">
+              <img :src="profileImage" alt="User profile picture" class="avatar" />
+
+              <label class="btn btn-outline-primary mt-3">
+                <i class="fa fa-camera me-2"></i>Change Photo
+                <input type="file" hidden accept="image/*" @change="onImageChange" />
+              </label>
+
+              <small v-if="imageError" class="text-danger d-block mt-2">
+                {{ imageError }}
+              </small>
+              <small v-else class="text-muted d-block mt-2">
+                JPG / PNG / WEBP · Max 2MB
+              </small>
+            </div>
+          </div>
+
+          <!-- Profile Form -->
+          <div class="col-12 col-md-8 wow fadeInRight d-flex justify-content-center">
+            <div class="card profile-form-card w-100">
+              <div class="card-body p-4 p-md-5">
+                <h2>Personal Information</h2>
+                <p class="text-muted mb-4">
+                  This information will be visible on your profile
+                </p>
+
+                <form @submit.prevent="handleSubmit">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">First Name</label>
+                      <input class="form-control" v-model="profile.firstName" required />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Last Name</label>
+                      <input class="form-control" v-model="profile.lastName" required />
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" v-model="profile.email" required />
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" v-model="profile.phone" />
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">City</label>
+                    <input class="form-control" v-model="profile.city" />
+                  </div>
+
+                  <div class="mb-4">
+                    <label class="form-label">About You</label>
+                    <textarea class="form-control" rows="4" v-model="profile.bio"></textarea>
+                  </div>
+
+                  <!-- Feedback -->
+                  <p v-if="successMessage" class="text-success">
+                    {{ successMessage }}
+                  </p>
+                  <p v-if="errorMessage" class="text-danger">
+                    {{ errorMessage }}
+                  </p>
+
+                  <button type="submit" class="btn btn-primary w-100" :disabled="isSaving">
+                    <span v-if="isSaving">Saving...</span>
+                    <span v-else>Save Changes</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>
+
+>>>>>>> daa3b6b3e8dd9a4bfbb93312c1334ae9cb42f0a3
 <style scoped>
 .profile-page {
   min-height: 100vh;

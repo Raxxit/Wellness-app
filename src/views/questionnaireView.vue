@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
-import { WOW } from 'wowjs';
+import * as wowModule from "wowjs";
+import "wowjs/css/libs/animate.css";
 
 // Reactive state for selections
 const selectedGoals = ref([]);
@@ -78,8 +79,10 @@ const submitQuestionnaire = () => {
 };
 
 onMounted(() => {
-    new WOW().init();
-})
+  const WOW = wowModule.WOW || wowModule.default.WOW;
+  new WOW().init();
+});
+
 </script>
 
 <template>
