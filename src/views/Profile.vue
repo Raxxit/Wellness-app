@@ -6,7 +6,6 @@ import "wowjs/css/libs/animate.css";
 
 const router = useRouter();
 
-
 const user = ref({
   username: '',
   email: '',
@@ -18,7 +17,8 @@ const formData = reactive({
   username: '',
   age: '',
   gender: '',
-  password: ''
+  password: '',
+  confirmPassword: ''
 });
 
 const isSaving = ref(false);
@@ -26,6 +26,16 @@ const isLoading = ref(true);
 const successMessage = ref("");
 const errorMessage = ref("");
 const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+
+// Validation errors
+const validationErrors = reactive({
+  username: '',
+  age: '',
+  gender: '',
+  password: '',
+  confirmPassword: ''
+});
 
 const getGenderText = (genderCode) => {
   const genderMap = {
@@ -41,6 +51,153 @@ onMounted(async () => {
   new WOW({ mobile: false }).init();
   await fetchUserProfile();
 });
+
+// Validation functions
+const validateUsername = () => {
+  validationErrors.username = '';
+  
+  if (!formData.username.trim()) {
+    validationErrors.username = 'Username is required';
+    return false;
+  }
+  
+  if (formData.username.length < 3) {
+    validationErrors.username = 'Username must be at least 3 characters';
+    return false;
+  }
+  
+  if (formData.username.length > 50) {
+    validationErrors.username = 'Username cannot exceed 50 characters';
+    return false;
+  }
+  
+  const usernameRegex = /^[a-zA-Z0-9_]+$/;
+  if (!usernameRegex.test(formData.username)) {
+    validationErrors.username = 'Username can only contain letters, numbers, and underscores';
+    return false;
+  }
+  
+  return true;
+};
+
+const validateAge = () => {
+  validationErrors.age = '';
+  
+  if (formData.age === '') {
+    // Age is optional, so empty is valid
+    return true;
+  }
+  
+  const ageNum = parseInt(formData.age);
+  
+  if (isNaN(ageNum)) {
+    validationErrors.age = 'Age must be a number';
+    return false;
+  }
+  
+  if (ageNum < 1 || ageNum > 120) {
+    validationErrors.age = 'Age must be between 1 and 120';
+    return false;
+  }
+  
+  return true;
+};
+
+const validateGender = () => {
+  validationErrors.gender = '';
+  
+  // Gender is optional, so always valid
+  return true;
+};
+
+const validatePassword = () => {
+  validationErrors.password = '';
+  
+  if (!formData.password) {
+    // Password is optional, so empty is valid
+    return true;
+  }
+  
+  if (formData.password.length < 6) {
+    validationErrors.password = 'Password must be at least 6 characters';
+    return false;
+  }
+  
+  if (formData.password.length > 100) {
+    validationErrors.password = 'Password cannot exceed 100 characters';
+    return false;
+  }
+  
+  // Optional: Add more password strength rules
+  const hasLetter = /[a-zA-Z]/.test(formData.password);
+  const hasNumber = /\d/.test(formData.password);
+  
+  if (!hasLetter || !hasNumber) {
+    validationErrors.password = 'Password should contain both letters and numbers';
+    return false;
+  }
+  
+  return true;
+};
+
+const validateConfirmPassword = () => {
+  validationErrors.confirmPassword = '';
+  
+  if (!formData.password && formData.confirmPassword) {
+    validationErrors.confirmPassword = 'Please enter password first';
+    return false;
+  }
+  
+  if (formData.password && formData.confirmPassword !== formData.password) {
+    validationErrors.confirmPassword = 'Passwords do not match';
+    return false;
+  }
+  
+  return true;
+};
+
+// Validate all fields
+const validateForm = () => {
+  let isValid = true;
+  
+  // Clear all validation errors
+  Object.keys(validationErrors).forEach(key => {
+    validationErrors[key] = '';
+  });
+  
+  // Validate each field
+  if (!validateUsername()) isValid = false;
+  if (!validateAge()) isValid = false;
+  if (!validateGender()) isValid = false;
+  if (!validatePassword()) isValid = false;
+  if (!validateConfirmPassword()) isValid = false;
+  
+  return isValid;
+};
+
+// Real-time validation on input change
+const onUsernameInput = () => {
+  validateUsername();
+};
+
+const onAgeInput = () => {
+  validateAge();
+};
+
+const onGenderChange = () => {
+  validateGender();
+};
+
+const onPasswordInput = () => {
+  validatePassword();
+  if (formData.confirmPassword) {
+    validateConfirmPassword();
+  }
+};
+
+const onConfirmPasswordInput = () => {
+  validateConfirmPassword();
+};
 
 const fetchUserProfile = async () => {
   try {
@@ -63,7 +220,6 @@ const fetchUserProfile = async () => {
       if (data.success) {
         user.value = data.user;
         
-        // Update form data
         formData.username = data.user.username || '';
         formData.age = data.user.age || '';
         formData.gender = data.user.gender || '';
@@ -84,9 +240,17 @@ const fetchUserProfile = async () => {
 };
 
 const handleSubmit = async () => {
-  isSaving.value = true;
+  // Clear previous messages
   successMessage.value = "";
   errorMessage.value = "";
+  
+  // Validate form before submission
+  if (!validateForm()) {
+    errorMessage.value = "Please fix the validation errors before submitting.";
+    return;
+  }
+  
+  isSaving.value = true;
 
   try {
     const token = localStorage.getItem('token');
@@ -97,7 +261,7 @@ const handleSubmit = async () => {
     }
 
     const updateData = {
-      username: formData.username,
+      username: formData.username.trim(),
       age: formData.age ? parseInt(formData.age) : null,
       gender: formData.gender ? parseInt(formData.gender) : null
     };
@@ -121,7 +285,15 @@ const handleSubmit = async () => {
       successMessage.value = "Profile updated successfully!";
       user.value = data.user;
       localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Clear password fields
       formData.password = '';
+      formData.confirmPassword = '';
+      
+      // Clear validation errors
+      Object.keys(validationErrors).forEach(key => {
+        validationErrors[key] = '';
+      });
       
       setTimeout(() => {
         successMessage.value = "";
@@ -131,7 +303,12 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error("Update error:", error);
-    errorMessage.value = "Cannot connect to server. Please check if Flask backend is running.";
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      errorMessage.value = "Cannot connect to server. Please check if Flask backend is running on http://127.0.0.1:5000";
+    } else {
+      errorMessage.value = "An unexpected error occurred. Please try again.";
+    }
   } finally {
     isSaving.value = false;
   }
@@ -157,6 +334,11 @@ const handleLogout = async () => {
     
     router.push('/login');
   }
+};
+
+// Helper function to check if there are any validation errors
+const hasValidationErrors = () => {
+  return Object.values(validationErrors).some(error => error !== '');
 };
 </script>
 
@@ -214,7 +396,7 @@ const handleLogout = async () => {
             <p>Update your personal information</p>
           </div>
 
-          <!-- Success/Error Messages -->
+          <!-- Success Message -->
           <div v-if="successMessage" class="alert alert-success">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -223,6 +405,7 @@ const handleLogout = async () => {
             {{ successMessage }}
           </div>
 
+          <!-- Error Message -->
           <div v-if="errorMessage" class="alert alert-error">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
@@ -236,14 +419,20 @@ const handleLogout = async () => {
             <div class="form-grid">
               <!-- Username Field -->
               <div class="form-group">
-                <label for="username">Username</label>
+                <label for="username">Username <span class="required">*</span></label>
                 <input 
                   id="username" 
                   v-model="formData.username" 
+                  @input="onUsernameInput"
+                  @blur="validateUsername"
                   type="text" 
                   placeholder="Enter username"
-                  required
+                  :class="{ 'error': validationErrors.username }"
                 />
+                <div v-if="validationErrors.username" class="validation-error">
+                  {{ validationErrors.username }}
+                </div>
+                <small class="hint">3-50 characters, letters, numbers, and underscores only</small>
               </div>
 
               <!-- Email Field (read-only) -->
@@ -265,11 +454,18 @@ const handleLogout = async () => {
                 <input 
                   id="age" 
                   v-model="formData.age" 
+                  @input="onAgeInput"
+                  @blur="validateAge"
                   type="number" 
                   min="1" 
                   max="120"
                   placeholder="Enter age"
+                  :class="{ 'error': validationErrors.age }"
                 />
+                <div v-if="validationErrors.age" class="validation-error">
+                  {{ validationErrors.age }}
+                </div>
+                <small class="hint">Optional, between 1-120</small>
               </div>
 
               <!-- Gender Field -->
@@ -278,7 +474,9 @@ const handleLogout = async () => {
                 <select 
                   id="gender" 
                   v-model="formData.gender"
+                  @change="onGenderChange"
                   class="form-select"
+                  :class="{ 'error': validationErrors.gender }"
                 >
                   <option value="">Select Gender</option>
                   <option value="1">Male</option>
@@ -286,36 +484,76 @@ const handleLogout = async () => {
                   <option value="3">Other</option>
                   <option value="0">Prefer not to say</option>
                 </select>
+                <div v-if="validationErrors.gender" class="validation-error">
+                  {{ validationErrors.gender }}
+                </div>
               </div>
 
               <!-- Password Field -->
               <div class="form-group full-width">
-                <label for="password">Change Password (Optional)</label>
+                <label for="password">Change Password</label>
                 <div class="password-input-wrapper">
                   <input 
                     id="password" 
                     v-model="formData.password" 
+                    @input="onPasswordInput"
+                    @blur="validatePassword"
                     :type="showPassword ? 'text' : 'password'"
                     placeholder="Enter new password"
+                    :class="{ 'error': validationErrors.password }"
                   />
                   <button 
                     type="button" 
                     @click="showPassword = !showPassword"
                     class="password-toggle"
+                    :class="{ 'active': showPassword }"
                   >
                     {{ showPassword ? 'Hide' : 'Show' }}
                   </button>
                 </div>
-                <small class="hint">Leave blank to keep current password</small>
+                <div v-if="validationErrors.password" class="validation-error">
+                  {{ validationErrors.password }}
+                </div>
+                <small class="hint">Optional, at least 6 characters with letters and numbers</small>
+              </div>
+
+              <!-- Confirm Password Field -->
+              <div class="form-group full-width" v-if="formData.password">
+                <label for="confirmPassword">Confirm Password</label>
+                <div class="password-input-wrapper">
+                  <input 
+                    id="confirmPassword" 
+                    v-model="formData.confirmPassword" 
+                    @input="onConfirmPasswordInput"
+                    @blur="validateConfirmPassword"
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    placeholder="Confirm new password"
+                    :class="{ 'error': validationErrors.confirmPassword }"
+                  />
+                  <button 
+                    type="button" 
+                    @click="showConfirmPassword = !showConfirmPassword"
+                    class="password-toggle"
+                    :class="{ 'active': showConfirmPassword }"
+                  >
+                    {{ showConfirmPassword ? 'Hide' : 'Show' }}
+                  </button>
+                </div>
+                <div v-if="validationErrors.confirmPassword" class="validation-error">
+                  {{ validationErrors.confirmPassword }}
+                </div>
               </div>
             </div>
 
             <div class="form-actions">
               <button 
                 type="submit" 
-                :disabled="isSaving" 
+                :disabled="isSaving || hasValidationErrors()" 
                 class="save-btn"
-                :class="{ 'loading': isSaving }"
+                :class="{ 
+                  'loading': isSaving,
+                  'disabled': hasValidationErrors()
+                }"
               >
                 <span v-if="isSaving" class="btn-loading">
                   <span class="spinner-small"></span>
@@ -354,10 +592,6 @@ const handleLogout = async () => {
           </div>
           <div class="account-info">
             <div class="info-item">
-              <span class="info-label">User ID:</span>
-              <span class="info-value">{{ user.id || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
               <span class="info-label">Email:</span>
               <span class="info-value">{{ user.email || 'No email' }}</span>
             </div>
@@ -371,6 +605,7 @@ const handleLogout = async () => {
     </div>
   </div>
 </template>
+
 
 <style scoped>
 .profile-page {
@@ -730,5 +965,91 @@ const handleLogout = async () => {
     width: 120px;
     height: 120px;
   }
+
+  /* Add to your existing styles */
+
+.required {
+  color: #c53030;
+}
+
+.validation-error {
+  color: #c53030;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.validation-error::before {
+  content: "⚠ ";
+}
+
+input.error,
+select.error,
+textarea.error {
+  border-color: #c53030 !important;
+  background-color: #fff5f5;
+}
+
+input.error:focus,
+select.error:focus,
+textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(197, 48, 48, 0.1) !important;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  padding-right: 70px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.password-toggle:hover {
+  background-color: #f8fafc;
+}
+
+.password-toggle.active {
+  background-color: #edf2f7;
+}
+
+.save-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.save-btn.disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.status-badge.error {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.status-badge.success {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+
 }
 </style>
