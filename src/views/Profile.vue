@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 import axios from "axios";
 
@@ -69,8 +68,9 @@ const handleSubmit = async () => {
   }
 };
 
-onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
+onMounted(async () => {
+  const wowModule = await import("wowjs");
+  const WOW = wowModule.default || wowModule;
   new WOW().init();
 });
 
