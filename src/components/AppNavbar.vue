@@ -1,66 +1,77 @@
 <script setup>
 import { ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
+import { authState } from '/src/authStore'; // Ensure this path matches your file location
 
+const router = useRouter();
 const isNavOpen = ref(false);
+
+// Logout function using the shared state
+const handleLogout = () => {
+  authState.logout();
+  router.push('/'); // Redirect to home without a full page refresh
+};
 </script>
 
 <template>
   <nav class="navbar navbar-expand-lg fixed-top bg-white shadow-sm">
     <div class="container">
-
       <RouterLink class="navbar-brand fw-bold" to="/">
         Wellness<span class="text-primary">App</span>
       </RouterLink>
 
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-        aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation" @click="isNavOpen = !isNavOpen">
+      <button 
+        class="navbar-toggler border-0" 
+        type="button" 
+        @click="isNavOpen = !isNavOpen"
+        data-bs-toggle="collapse" 
+        data-bs-target="#mainNav"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse" id="mainNav">
+      <div class="collapse navbar-collapse" :class="{ 'show': isNavOpen }" id="mainNav">
         <ul class="navbar-nav ms-auto align-items-center">
-
+          
           <li class="nav-item" v-for="item in ['Home', 'Community', 'About', 'Questionnaire']" :key="item">
             <RouterLink class="nav-link custom-link" :to="item === 'Home' ? '/' : `/${item.toLowerCase()}`">
               {{ item }}
             </RouterLink>
           </li>
 
-          <li class="nav-item dropdown ms-lg-3">
-            <a class="btn nav-link custom-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Account
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-              <li>
-                <RouterLink class="dropdown-item" to="/login">Login</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/register">Register</RouterLink>
-              </li>
+          <template v-if="!authState.user">
+            <li class="nav-item dropdown ms-lg-3">
+              <a class="btn nav-link custom-link" href="#" role="button" data-bs-toggle="dropdown">
+                Account
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                <li><RouterLink class="dropdown-item" to="/login">Login</RouterLink></li>
+                <li><RouterLink class="dropdown-item" to="/register">Register</RouterLink></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><RouterLink class="dropdown-item" to="/profile">Profile</RouterLink></li>
+              </ul>
+            </li>
 
-              <li>
-                <RouterLink class="dropdown-item" to="/questionnaire">questionnaire</RouterLink>
-              </li>
+            <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+              <RouterLink to="/register" class="btn btn-primary px-4 rounded-pill shadow-sm">
+                Get Started
+              </RouterLink>
+            </li>
+          </template>
 
-
-              <li>
-                <hr class="dropdown-divider">
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/profile">Profile</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/report">Report</RouterLink>
-              </li>
-            </ul>
-          </li>
-
-          <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
-            <RouterLink to="/register" class="btn btn-primary px-4 rounded-pill shadow-sm">
-              Get Started
-            </RouterLink>
-          </li>
+          <template v-else>
+            <li class="nav-item ms-lg-3">
+<div class="user-name">
+  Welcome, {{ authState.user.name || authState.user.email?.split('@')[0] || 'User' }}
+</div> 
+            </li>
+            
+            <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+              <button @click="handleLogout" class="btn btn-outline-primary px-4 rounded-pill">
+                Logout
+              </button>
+            </li>
+          </template>
 
         </ul>
       </div>
@@ -69,13 +80,11 @@ const isNavOpen = ref(false);
 </template>
 
 <style scoped>
-/* --- 1. NAVBAR BASE STYLES --- */
 .navbar {
   padding-top: 15px;
   padding-bottom: 15px;
 }
 
-/* --- 2. LINK ANIMATIONS --- */
 .custom-link {
   font-weight: 500;
   color: #636262;
@@ -113,7 +122,6 @@ const isNavOpen = ref(false);
   width: 100%;
 }
 
-/* --- 3. DROPDOWN ANIMATION (DESKTOP ONLY) --- */
 @media (min-width: 992px) {
   .dropdown-menu {
     display: block;
@@ -130,7 +138,14 @@ const isNavOpen = ref(false);
   }
 }
 
-/* --- 4. MOBILE ADJUSTMENTS --- */
+.user-name {
+  font-weight: 600;
+  color: #0d6efd;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: #f8f9fa;
+}
+
 @media (max-width: 991px) {
   .navbar-collapse {
     background: white;
@@ -140,15 +155,9 @@ const isNavOpen = ref(false);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   }
 
-  .navbar {
-    padding: 15px 0;
-  }
-
-  .dropdown-menu {
-    border: none;
-    box-shadow: none;
-    padding-left: 20px;
-    margin-top: 0;
+  .user-name {
+    margin-top: 10px;
+    text-align: center;
   }
 }
 </style>
