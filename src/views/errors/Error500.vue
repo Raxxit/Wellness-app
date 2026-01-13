@@ -1,6 +1,12 @@
 <script setup>
 import { onMounted } from "vue";
-import WOW from "wowjs";
+import "wowjs/css/libs/animate.css";
+onMounted(async () => {
+  const wowModule = await import("wowjs");
+  const WOW = wowModule.default || wowModule;
+  new WOW().init();
+});
+
 </script>
 
 <template>
@@ -88,9 +94,11 @@ import WOW from "wowjs";
   0% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
+
   100% {
     transform: translateY(0);
   }
@@ -101,6 +109,7 @@ import WOW from "wowjs";
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

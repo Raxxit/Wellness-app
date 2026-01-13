@@ -1,6 +1,12 @@
 <script setup>
 import { onMounted } from "vue";
-import WOW from "wowjs";
+import "wowjs/css/libs/animate.css";
+onMounted(async () => {
+  const wowModule = await import("wowjs");
+  const WOW = wowModule.default || wowModule;
+  new WOW().init();
+});
+
 </script>
 
 <template>
