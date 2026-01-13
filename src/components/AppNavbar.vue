@@ -49,6 +49,7 @@ const handleLogout = () => {
                 <li><RouterLink class="dropdown-item" to="/register">Register</RouterLink></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><RouterLink class="dropdown-item" to="/profile">Profile</RouterLink></li>
+                                <li><RouterLink class="dropdown-item" to="/report">Report</RouterLink></li>
               </ul>
             </li>
 

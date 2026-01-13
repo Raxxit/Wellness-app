@@ -4,7 +4,7 @@ import AboutView from '@/views/AboutView.vue'
 import QuestionnaireView from '@/views/questionnaireView.vue'
 import Profile from '@/views/Profile.vue'
 import login from '@/views/login.vue'
-
+import reportView from '@/views/reportView.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +41,12 @@ const router = createRouter({
             path: '/login',
             name: 'login',
             component: login
+        },
+
+        {
+                    path: '/report',
+            name: 'report',
+            component: reportView
         },
 
 
