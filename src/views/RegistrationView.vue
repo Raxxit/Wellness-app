@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 import axios from 'axios';
 
 import registrationBg from '@/assets/img/3.png';
+
+const router = useRouter();
 
 const formData = ref({
   username: '',
@@ -15,24 +18,166 @@ const formData = ref({
   gender: '',
 });
 
+// Alert/Message state
+const alert = ref({
+  show: false,
+  type: '', // 'success' or 'error'
+  message: ''
+});
+
+// Show alert message
+const showAlert = (type, message) => {
+  alert.value.show = true;
+  alert.value.type = type;
+  alert.value.message = message;
+
+  // Scroll to top so user can see the error
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    alert.value.show = false;
+  }, 5000);
+};
+
+// Close alert manually
+const closeAlert = () => {
+  alert.value.show = false;
+};
+
+// Validation functions
+const validateEmail = (email) => {
+  // Check if email contains @ and has text after @
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validateAge = (age) => {
+  // Age should be a number between 18 and 100
+  const ageNum = parseInt(age);
+  return !isNaN(ageNum) && ageNum >= 18 && ageNum <= 100;
+};
+
+const validatePassword = (password) => {
+  // Password should be at least 8 characters
+  return password.length >= 8;
+};
+
+// Sanitize input - remove dangerous characters
+const sanitizeInput = (input) => {
+  // Remove < > to prevent script injection
+  return input.replace(/[<>]/g, '');
+};
+
 const handleSubmit = async () => {
+  // 1. CHECK FOR EMPTY FIELDS
+  if (!formData.value.username.trim()) {
+    showAlert('error', 'Please enter your username');
+    return;
+  }
+  if (!formData.value.email.trim()) {
+    showAlert('error', 'Please enter your email');
+    return;
+  }
+  if (!formData.value.age) {
+    showAlert('error', 'Please enter your age');
+    return;
+  }
+  if (!formData.value.gender) {
+    showAlert('error', 'Please select your gender');
+    return;
+  }
+  if (!formData.value.password) {
+    showAlert('error', 'Please enter a password');
+    return;
+  }
+  if (!formData.value.confirmPassword) {
+    showAlert('error', 'Please confirm your password');
+    return;
+  }
+
+  // 2. VALIDATE EMAIL FORMAT
+  if (!validateEmail(formData.value.email)) {
+    showAlert('error', 'Please enter a valid email (e.g., user@example.com)');
+    return;
+  }
+
+  // 3. VALIDATE AGE (18-100)
+  if (!validateAge(formData.value.age)) {
+    showAlert('error', 'Age must be between 18 and 100');
+    return;
+  }
+
+  // 4. VALIDATE PASSWORD LENGTH
+  if (!validatePassword(formData.value.password)) {
+    showAlert('error', 'Password must be at least 8 characters long');
+    return;
+  }
+
+  // 5. CHECK IF PASSWORDS MATCH
+  if (formData.value.password !== formData.value.confirmPassword) {
+    showAlert('error', 'Passwords do not match');
+    return;
+  }
+
+  // 6. SANITIZE ALL INPUTS
+  const sanitizedData = {
+    username: sanitizeInput(formData.value.username.trim()),
+    email: sanitizeInput(formData.value.email.trim()),
+    age: parseInt(formData.value.age),
+    gender: formData.value.gender,
+    password: formData.value.password // Don't sanitize password, it needs special chars
+  };
+
+  // Create FormData for API (matching your DB fields: username, email, age, gender, password)
   const data = new FormData();
+  data.append('username', sanitizedData.username);
+  data.append('email', sanitizedData.email);
+  data.append('age', sanitizedData.age);
+  data.append('gender', sanitizedData.gender);
+  data.append('password', sanitizedData.password);
 
-  data.append('username', formData.value.username);
-  data.append('email', formData.value.email);
-  data.append('age', formData.value.age);
-  data.append('gender', formData.value.gender);
-  data.append('password', formData.value.password);
   try {
-
     const response = await axios.post('http://127.0.0.1:5000/api/register', data);
 
-    if (response.status === 200) {
-      alert('Registration successful!');
+    if (response.status === 200 || response.status === 201) {
+      showAlert('success', 'Registration successful! Redirecting to login...');
+      
+      // Clear form after successful registration
+      formData.value = {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        age: '',
+        gender: '',
+      };
+
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     }
   } catch (error) {
-    console.error(error);
-    alert('Registration failed');
+    console.error('Registration error:', error);
+    
+    // Check for email uniqueness error (status 409 or specific message)
+    if (error.response && error.response.status === 409) {
+      showAlert('error', 'This email is already registered. Please use a different email or login.');
+    } 
+    // Show specific error message from server if available
+    else if (error.response && error.response.data && error.response.data.message) {
+      showAlert('error', error.response.data.message);
+    } 
+    else if (error.response && error.response.data && error.response.data.error) {
+      showAlert('error', error.response.data.error);
+    } 
+    else {
+      showAlert('error', 'Registration failed. Please check if the backend server is running.');
+    }
   }
 };
 
@@ -107,17 +252,28 @@ onMounted(() => {
             <div class="card border-0 shadow-lg rounded">
               <div class="card-body p-4 p-md-5">
                 <h2 class="fw-bold mb-2 text-center">Create Your Account</h2>
-                <p class="text-center text-muted mb-4">Join thousands on their path to better mental health</p>
+                <p class="text-center text-muted mb-3">Join thousands on their path to better mental health</p>
+
+                <!-- Alert Message (compact, above form) -->
+                <transition name="slide-fade">
+                  <div v-if="alert.show" :class="['alert', alert.type === 'success' ? 'alert-success' : 'alert-danger', 'alert-dismissible', 'fade', 'show', 'py-2', 'mb-3']" role="alert">
+                    <small>
+                      <i :class="alert.type === 'success' ? 'fa fa-check-circle' : 'fa fa-exclamation-circle'" class="me-2"></i>
+                      <strong>{{ alert.message }}</strong>
+                    </small>
+                    <button @click="closeAlert" type="button" class="btn-close btn-close-sm" aria-label="Close"></button>
+                  </div>
+                </transition>
 
                 <form @submit.prevent="handleSubmit">
 
-                  <!-- Full Name -->
+                  <!-- Username -->
                   <div class="mb-3">
                     <label for="username" class="form-label fw-bold">
                       <i class="fa fa-user text-primary me-2"></i>User Name
                     </label>
                     <input type="text" class="form-control form-control-lg" id="username" v-model="formData.username"
-                      placeholder="Enter your user name" required>
+                      placeholder="Enter your user name" maxlength="50">
                   </div>
 
                   <!-- Email -->
@@ -125,8 +281,8 @@ onMounted(() => {
                     <label for="email" class="form-label fw-bold">
                       <i class="fa fa-envelope text-primary me-2"></i>Email Address
                     </label>
-                    <input type="email" class="form-control form-control-lg" id="email" v-model="formData.email"
-                      placeholder="your.email@example.com" required>
+                    <input type="text" class="form-control form-control-lg" id="email" v-model="formData.email"
+                      placeholder="your.email@example.com" maxlength="100">
                     <small class="text-muted">We'll send your wellness reports here</small>
                   </div>
 
@@ -137,19 +293,19 @@ onMounted(() => {
                         <i class="fa fa-birthday-cake text-primary me-2"></i>Age
                       </label>
                       <input type="number" class="form-control form-control-lg" id="age" v-model="formData.age"
-                        placeholder="25" min="13" max="120" required>
+                        placeholder="25" min="18" max="100">
                     </div>
 
                     <div class="col-md-6 mb-3">
                       <label for="gender" class="form-label fw-bold">
                         <i class="fa fa-venus-mars text-primary me-2"></i>Gender
                       </label>
-                      <select class="form-control form-control-lg" id="gender" v-model="formData.gender" required>
+                      <select class="form-control form-control-lg" id="gender" v-model="formData.gender">
                         <option value="">Select</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="other">Other</option>
-                        <option value="prefer-not-to-say">Prefer not to say</option>
+                       
                       </select>
                     </div>
                   </div>
@@ -160,7 +316,7 @@ onMounted(() => {
                       <i class="fa fa-lock text-primary me-2"></i>Password
                     </label>
                     <input type="password" class="form-control form-control-lg" id="password"
-                      v-model="formData.password" placeholder="Create a strong password" required>
+                      v-model="formData.password" placeholder="Create a strong password (min 8 characters)" maxlength="100">
                   </div>
 
                   <!-- Confirm Password -->
@@ -169,7 +325,7 @@ onMounted(() => {
                       <i class="fa fa-lock text-primary me-2"></i>Confirm Password
                     </label>
                     <input type="password" class="form-control form-control-lg" id="confirmPassword"
-                      v-model="formData.confirmPassword" placeholder="Re-enter your password" required>
+                      v-model="formData.confirmPassword" placeholder="Re-enter your password" maxlength="100">
                   </div>
 
                   <!-- Privacy Notice -->
@@ -188,7 +344,7 @@ onMounted(() => {
                   <!-- Login Link -->
                   <p class="text-center mt-4 mb-0 text-muted">
                     Already have an account?
-                    <router-link to="/" class="text-primary fw-bold text-decoration-none">Login here</router-link>
+                    <router-link to="/login" class="text-primary fw-bold text-decoration-none">Login here</router-link>
                   </p>
                 </form>
               </div>
@@ -203,6 +359,25 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Slide fade animation for alert */
+.slide-fade-enter-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+.slide-fade-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
 /* Matching the AboutView image hover effect */
 .image-wrapper img {
   width: 100%;
@@ -245,5 +420,22 @@ onMounted(() => {
   background-color: #e7f3ff;
   border: 1px solid #b3d9ff;
   border-radius: 8px;
+}
+
+/* Compact alert styling */
+.alert {
+  border-radius: 8px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
 }
 </style>
