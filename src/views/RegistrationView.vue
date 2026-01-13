@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 import axios from 'axios';
 
@@ -25,7 +24,7 @@ const handleSubmit = async () => {
   data.append('password', formData.value.password);
   try {
 
-    const response = await axios.post('http://127.0.0.1:5000/api/register', data);
+    const response = await axios.post('/api/register', data);
 
     if (response.status === 200) {
       alert('Registration successful!');
@@ -36,8 +35,9 @@ const handleSubmit = async () => {
   }
 };
 
-onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
+onMounted(async () => {
+  const wowModule = await import("wowjs");
+  const WOW = wowModule.default || wowModule;
   new WOW().init();
 });
 
