@@ -1,7 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 import axios from 'axios';
 
@@ -123,16 +121,9 @@ const handleSubmit = async () => {
     return;
   }
 
-  // 6. SANITIZE ALL INPUTS
-  const sanitizedData = {
-    username: sanitizeInput(formData.value.username.trim()),
-    email: sanitizeInput(formData.value.email.trim()),
-    age: parseInt(formData.value.age),
-    gender: formData.value.gender,
-    password: formData.value.password // Don't sanitize password, it needs special chars
-  };
+    const response = await axios.post('/api/register', data);
 
-  // Create FormData for API (matching your DB fields: username, email, age, gender, password)
+
   const data = new FormData();
   data.append('username', sanitizedData.username);
   data.append('email', sanitizedData.email);
@@ -146,7 +137,6 @@ const handleSubmit = async () => {
     if (response.status === 200 || response.status === 201) {
       showAlert('success', 'Registration successful! Redirecting to login...');
 
-      // Clear form after successful registration
       formData.value = {
         username: '',
         email: '',
@@ -159,12 +149,11 @@ const handleSubmit = async () => {
       // Redirect to login page after 2 seconds
       setTimeout(() => {
         router.push('/login');
-      }, 2000);
+      }, 200);
     }
   } catch (error) {
     console.error('Registration error:', error);
 
-    // Check for email uniqueness error (status 409 or specific message)
     if (error.response && error.response.status === 409) {
       showAlert('error', 'This email is already registered. Please use a different email or login.');
     }
@@ -181,8 +170,9 @@ const handleSubmit = async () => {
   }
 };
 
-onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
+onMounted(async () => {
+  const wowModule = await import("wowjs");
+  const WOW = wowModule.default || wowModule;
   new WOW().init();
 });
 
