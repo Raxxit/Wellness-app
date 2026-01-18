@@ -116,18 +116,29 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+
+const router = useRouter()
+const loading = ref(false)
+const errorMessage = ref('')
+
+const showPassword = ref(false)
+const rememberMe = ref(false)
 
 const form = reactive({
   email: '',
   password: ''
 })
 
-const loading = ref(false)
-const errorMessage = ref('')
-const router = useRouter()
+onMounted(() => {
+  const savedEmail = localStorage.getItem('rememberedEmail')
+  if (savedEmail) {
+    form.email = savedEmail
+    rememberMe.value = true
+  }
+})
 
 const handleLogin = async () => {
   errorMessage.value = ''
@@ -140,6 +151,12 @@ const handleLogin = async () => {
     })
 
     if (response.data.success) {
+      if (rememberMe.value) {
+        localStorage.setItem('rememberedEmail', form.email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
+
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
 
