@@ -61,7 +61,7 @@ def login():
             "message": f"Login error: {str(e)}"
         }), 500
 
-@auth_bp.route('/health', methods=['GET'])
+@auth_bp.route('health', methods=['GET'])
 def health():
     return jsonify({
         "status": "healthy",

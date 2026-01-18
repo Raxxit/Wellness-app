@@ -1,7 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 import axios from 'axios';
 
@@ -123,16 +121,9 @@ const handleSubmit = async () => {
     return;
   }
 
-  // 6. SANITIZE ALL INPUTS
-  const sanitizedData = {
-    username: sanitizeInput(formData.value.username.trim()),
-    email: sanitizeInput(formData.value.email.trim()),
-    age: parseInt(formData.value.age),
-    gender: formData.value.gender,
-    password: formData.value.password // Don't sanitize password, it needs special chars
-  };
+    const response = await axios.post('/api/register', data);
 
-  // Create FormData for API (matching your DB fields: username, email, age, gender, password)
+
   const data = new FormData();
   data.append('username', sanitizedData.username);
   data.append('email', sanitizedData.email);
@@ -141,12 +132,11 @@ const handleSubmit = async () => {
   data.append('password', sanitizedData.password);
 
   try {
-    const response = await axios.post('http://127.0.0.1:5000/api/register', data);
+    const response = await axios.post('/api/register', data);
 
     if (response.status === 200 || response.status === 201) {
       showAlert('success', 'Registration successful! Redirecting to login...');
-      
-      // Clear form after successful registration
+
       formData.value = {
         username: '',
         email: '',
@@ -159,30 +149,30 @@ const handleSubmit = async () => {
       // Redirect to login page after 2 seconds
       setTimeout(() => {
         router.push('/login');
-      }, 2000);
+      }, 200);
     }
   } catch (error) {
     console.error('Registration error:', error);
-    
-    // Check for email uniqueness error (status 409 or specific message)
+
     if (error.response && error.response.status === 409) {
       showAlert('error', 'This email is already registered. Please use a different email or login.');
-    } 
+    }
     // Show specific error message from server if available
     else if (error.response && error.response.data && error.response.data.message) {
       showAlert('error', error.response.data.message);
-    } 
+    }
     else if (error.response && error.response.data && error.response.data.error) {
       showAlert('error', error.response.data.error);
-    } 
+    }
     else {
       showAlert('error', 'Registration failed. Please check if the backend server is running.');
     }
   }
 };
 
-onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
+onMounted(async () => {
+  const wowModule = await import("wowjs");
+  const WOW = wowModule.default || wowModule;
   new WOW().init();
 });
 
@@ -256,12 +246,16 @@ onMounted(() => {
 
                 <!-- Alert Message (compact, above form) -->
                 <transition name="slide-fade">
-                  <div v-if="alert.show" :class="['alert', alert.type === 'success' ? 'alert-success' : 'alert-danger', 'alert-dismissible', 'fade', 'show', 'py-2', 'mb-3']" role="alert">
+                  <div v-if="alert.show"
+                    :class="['alert', alert.type === 'success' ? 'alert-success' : 'alert-danger', 'alert-dismissible', 'fade', 'show', 'py-2', 'mb-3']"
+                    role="alert">
                     <small>
-                      <i :class="alert.type === 'success' ? 'fa fa-check-circle' : 'fa fa-exclamation-circle'" class="me-2"></i>
+                      <i :class="alert.type === 'success' ? 'fa fa-check-circle' : 'fa fa-exclamation-circle'"
+                        class="me-2"></i>
                       <strong>{{ alert.message }}</strong>
                     </small>
-                    <button @click="closeAlert" type="button" class="btn-close btn-close-sm" aria-label="Close"></button>
+                    <button @click="closeAlert" type="button" class="btn-close btn-close-sm"
+                      aria-label="Close"></button>
                   </div>
                 </transition>
 
@@ -305,7 +299,7 @@ onMounted(() => {
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="other">Other</option>
-                       
+
                       </select>
                     </div>
                   </div>
@@ -316,7 +310,8 @@ onMounted(() => {
                       <i class="fa fa-lock text-primary me-2"></i>Password
                     </label>
                     <input type="password" class="form-control form-control-lg" id="password"
-                      v-model="formData.password" placeholder="Create a strong password (min 8 characters)" maxlength="100">
+                      v-model="formData.password" placeholder="Create a strong password (min 8 characters)"
+                      maxlength="100">
                   </div>
 
                   <!-- Confirm Password -->
