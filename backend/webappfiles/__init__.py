@@ -1,6 +1,7 @@
 from flask import Flask
 import os
 from .extensions import db, cors
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)

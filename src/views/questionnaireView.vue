@@ -1,18 +1,93 @@
 <script setup>
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
+import axios from 'axios';
+
+const router = useRouter();
 
 // Reactive state for selections
 const selectedGoals = ref([]);
 const selectedSleepQuality = ref(null);
-const selectedStressLevel = ref(5); // Default middle value
+const selectedStressLevel = ref(5);
 const selectedHabits = ref([]);
 const energyLevels = ref({
   morning: 'medium',
   afternoon: 'high', 
   evening: 'low'
 });
+
+// NEW: Database questions
+const dbQuestions = ref([]);
+const dbAnswers = ref({});
+
+// Alert state
+const alert = ref({
+  show: false,
+  type: '',
+  message: ''
+});
+
+// Show alert
+const showAlert = (type, message) => {
+  alert.value.show = true;
+  alert.value.type = type;
+  alert.value.message = message;
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  setTimeout(() => {
+    alert.value.show = false;
+  }, 5000);
+};
+
+// Close alert
+const closeAlert = () => {
+  alert.value.show = false;
+};
+
+// Fetch questions from database
+const fetchQuestions = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showAlert('error', 'Please login to access the questionnaire');
+      router.push('/login');
+      return;
+    }
+
+    const response = await axios.get('http://127.0.0.1:5000/api/questionnaire/questions', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.data.success) {
+      dbQuestions.value = response.data.questions;
+      // Initialize answers object
+      dbQuestions.value.forEach(q => {
+        dbAnswers.value[q.question_id] = null;
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    if (error.response && error.response.status === 401) {
+      showAlert('error', 'Session expired. Please login again');
+      router.push('/login');
+    } else {
+      showAlert('error', 'Failed to load questions. Please try again.');
+    }
+  }
+};
+
+// Select answer for database question
+const selectAnswer = (questionId, optionId) => {
+  dbAnswers.value[questionId] = optionId;
+};
 
 // Function to toggle goal selection
 const toggleGoal = (goal) => {
@@ -65,22 +140,67 @@ const getEnergyHeight = (level) => {
 };
 
 // Form submission handler
-const submitQuestionnaire = () => {
-  const data = {
-    goals: selectedGoals.value,
-    sleepQuality: selectedSleepQuality.value,
-    stressLevel: selectedStressLevel.value,
-    habits: selectedHabits.value,
-    energyLevels: energyLevels.value
-  };
-  console.log('Submitting questionnaire:', data);
-  // Here you would typically send this to your backend
-  alert('Questionnaire submitted! Check console for data.');
+const submitQuestionnaire = async () => {
+  try {
+    // Validate that all DB questions are answered
+    const unansweredQuestions = dbQuestions.value.filter(q => !dbAnswers.value[q.question_id]);
+    if (unansweredQuestions.length > 0) {
+      showAlert('error', 'Please answer all questions before submitting');
+      return;
+    }
+
+    // Prepare answers array for backend
+    const answers = Object.keys(dbAnswers.value).map(questionId => ({
+      question_id: parseInt(questionId),
+      option_id: dbAnswers.value[questionId]
+    }));
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showAlert('error', 'Please login to submit the questionnaire');
+      router.push('/login');
+      return;
+    }
+
+    // Submit to backend
+    const response = await axios.post(
+      'http://127.0.0.1:5000/api/questionnaire/submit',
+      { answers },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (response.data.success) {
+      const result = response.data.result;
+      showAlert('success', `Assessment complete! Your wellness level: ${result.result_level}/5`);
+      
+      // Optionally redirect to results page after 3 seconds
+      setTimeout(() => {
+        // You can create a results page later
+        console.log('Result:', result);
+      }, 3000);
+    }
+
+  } catch (error) {
+    console.error('Submission error:', error);
+    if (error.response && error.response.data && error.response.data.message) {
+      showAlert('error', error.response.data.message);
+    } else {
+      showAlert('error', 'Failed to submit questionnaire. Please try again.');
+    }
+  }
 };
 
 onMounted(() => {
   const WOW = wowModule.WOW || wowModule.default.WOW;
   new WOW().init();
+  
+  // Fetch questions from database
+  fetchQuestions();
 });
 
 </script>
@@ -108,12 +228,45 @@ onMounted(() => {
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-12 col-lg-8">
+
+                        <!-- Alert Message -->
+                        <transition name="slide-fade">
+                          <div v-if="alert.show" :class="['alert', alert.type === 'success' ? 'alert-success' : 'alert-danger', 'alert-dismissible', 'fade', 'show', 'mb-4']" role="alert">
+                            <i :class="alert.type === 'success' ? 'fa fa-check-circle' : 'fa fa-exclamation-circle'" class="me-2"></i>
+                            <strong>{{ alert.message }}</strong>
+                            <button @click="closeAlert" type="button" class="btn-close" aria-label="Close"></button>
+                          </div>
+                        </transition>
+
+                        <!-- DATABASE QUESTIONS (Mental Health Assessment) -->
+                        <div v-for="(question, qIndex) in dbQuestions" :key="question.question_id" 
+                             class="card shadow-sm border-0 mb-4 wow fadeInUp" :data-wow-delay="`${0.1 * (qIndex + 1)}s`">
+                            <div class="card-body p-4">
+                                <h4 class="fw-bold text-primary mb-3">
+                                    {{ qIndex + 1 }}. {{ question.question_text }}
+                                </h4>
+                                
+                                <div class="d-grid gap-2">
+                                    <button 
+                                        v-for="option in question.options" 
+                                        :key="option.option_id"
+                                        type="button"
+                                        class="btn btn-outline-primary text-start p-3"
+                                        :class="{ 'active': dbAnswers[question.question_id] === option.option_id }"
+                                        @click="selectAnswer(question.question_id, option.option_id)"
+                                    >
+                                        <i class="fa fa-circle me-2" :class="dbAnswers[question.question_id] === option.option_id ? 'fa-check-circle' : 'fa-circle-o'"></i>
+                                        {{ option.option_text }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <!-- Question 1: Wellness Goals -->
+                        <!-- Question 1: Wellness Goals (KEEPING YOUR ORIGINAL UI) -->
                         <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.1s">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold text-primary mb-3">
-                                    1. What are your primary wellness goals?
+                                    {{ dbQuestions.length + 1 }}. What are your primary wellness goals?
                                 </h4>
                                 <p class="text-muted mb-4">Select all that apply</p>
                                 
@@ -182,11 +335,12 @@ onMounted(() => {
                             </div>
                         </div>
 
+                        <!-- ALL YOUR OTHER ORIGINAL QUESTIONS STAY THE SAME -->
                         <!-- Question 2: Sleep Quality -->
                         <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.2s">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold text-primary mb-3">
-                                    2. How would you rate your sleep quality?
+                                    {{ dbQuestions.length + 2 }}. How would you rate your sleep quality?
                                 </h4>
                                 
                                 <div class="d-flex justify-content-between align-items-center">
@@ -258,7 +412,7 @@ onMounted(() => {
                         <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.3s">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold text-primary mb-4">
-                                    3. Current stress level
+                                    {{ dbQuestions.length + 3 }}. Current stress level
                                 </h4>
                                 
                                 <div class="stress-slider-container">
@@ -288,7 +442,7 @@ onMounted(() => {
                         <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.4s">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold text-primary mb-3">
-                                    4. Which wellness activities do you currently practice?
+                                    {{ dbQuestions.length + 4 }}. Which wellness activities do you currently practice?
                                 </h4>
                                 
                                 <div class="row g-2">
@@ -420,7 +574,7 @@ onMounted(() => {
                         <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.5s">
                             <div class="card-body p-4">
                                 <h4 class="fw-bold text-primary mb-4">
-                                    5. How's your energy throughout the day?
+                                    {{ dbQuestions.length + 5 }}. How's your energy throughout the day?
                                 </h4>
                                 
                                 <div class="energy-chart">
@@ -526,7 +680,7 @@ onMounted(() => {
                                 class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-sm"
                                 @click="submitQuestionnaire"
                             >
-                                <i class=""></i>
+                                <i class="fa fa-check me-2"></i>
                                 Get My Wellness Plan
                             </button>
                             <p class="text-muted mt-3 small">
@@ -535,16 +689,32 @@ onMounted(() => {
                         </div>
 
                     </div>
-                </div>
+                    </div>
             </div>
         </section>
-
-    </div>
-</template>
-
+</div>
+        </template>
 <style scoped>
-/* Custom styles for the questionnaire page */
+/* Slide fade animation */
+.slide-fade-enter-active {
+  transition: all 0.3s ease;
+}
 
+.slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+.slide-fade-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+/* Custom styles for the questionnaire page */
 .bg-gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -634,6 +804,13 @@ onMounted(() => {
 }
 
 .btn-group .btn.active {
+    background-color: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+/* Database questions styling */
+.btn-outline-primary.active {
     background-color: #667eea;
     border-color: #667eea;
     color: white;
