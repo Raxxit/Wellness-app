@@ -10,6 +10,7 @@ import Error404 from '@/views/errors/Error404.vue'
 import Error405 from '@/views/errors/Error405.vue'
 import Error500 from '@/views/errors/Error500.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
+import Login from '@/views/login.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +45,12 @@ const router = createRouter({
             path: '/error/400',
             name: 'Error400',
             component: Error400
+        },
+
+        {
+            path: '/login',
+            name: 'login',
+            component: Login
         },
 
         {
