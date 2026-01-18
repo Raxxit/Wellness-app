@@ -40,7 +40,7 @@ const isNavOpen = ref(false);
               </li>
 
               <li>
-                <RouterLink class="dropdown-item" to="/questionnaire">questionnaire</RouterLink>
+                <RouterLink class="dropdown-item" to="/resources">Resources</RouterLink>
               </li>
 
 

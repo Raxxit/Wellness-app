@@ -4,6 +4,7 @@ import AboutView from '@/views/AboutView.vue'
 import QuestionnaireView from '@/views/questionnaireView.vue'
 import Profile from '@/views/Profile.vue'
 import login from '@/views/login.vue'
+import resources from '@/views/resources.vue'
 
 
 const router = createRouter({
@@ -44,6 +45,12 @@ const router = createRouter({
             name: 'profile',
             component: () => import('../views/Profile.vue'),
             meta: { requiresAuth: true } 
+        },
+
+        {
+            path: '/resources',
+            name: 'resources',
+            component: resources
         },
         
 
