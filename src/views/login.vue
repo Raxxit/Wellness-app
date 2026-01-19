@@ -23,51 +23,39 @@
           <!-- Email Input -->
           <div class="input-group">
             <div class="input-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
             </div>
-            <input 
-              type="email" 
-              v-model="form.email"
-              placeholder=""
-              required
-              :disabled="loading"
-              class="form-input"
-            />
+            <input type="email" v-model="form.email" placeholder="" required :disabled="loading" class="form-input" />
             <label>Email Address</label>
           </div>
 
           <!-- Password Input -->
           <div class="input-group">
             <div class="input-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
             </div>
-            <input 
-              :type="showPassword ? 'text' : 'password'"
-              v-model="form.password"
-              placeholder=""
-              required
-              :disabled="loading"
-              class="form-input"
-            />
+            <input :type="showPassword ? 'text' : 'password'" v-model="form.password" placeholder="" required
+              :disabled="loading" class="form-input" />
             <label>Password</label>
-            <button 
-              type="button" 
-              @click="showPassword = !showPassword"
-              class="password-toggle"
-              :disabled="loading"
-            >
-              <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" @click="showPassword = !showPassword" class="password-toggle" :disabled="loading">
+              <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                </path>
                 <line x1="1" y1="1" x2="23" y2="23"></line>
               </svg>
             </button>
@@ -84,14 +72,10 @@
           </div>
 
           <!-- Submit Button -->
-          <button 
-            type="submit" 
-            :disabled="loading" 
-            class="submit-button"
-            :class="{ loading: loading }"
-          >
+          <button type="submit" :disabled="loading" class="submit-button" :class="{ loading: loading }">
             <span v-if="!loading">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
                 <path d="M20 6L9 17l-5-5"></path>
               </svg>
               Sign In
@@ -107,18 +91,19 @@
             <span>or continue with</span>
           </div>
 
-        
+
 
           <!-- Sign Up Link -->
           <p class="signup-link">
-            New to Wellness? 
+            New to Wellness?
             <a href="#" class="signup-text">Create an account</a>
           </p>
         </form>
 
         <!-- Error Message -->
         <div v-if="errorMessage" class="error-message">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -131,33 +116,50 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+
+const router = useRouter()
+const loading = ref(false)
+const errorMessage = ref('')
+
+const showPassword = ref(false)
+const rememberMe = ref(false)
 
 const form = reactive({
   email: '',
   password: ''
 })
 
-const loading = ref(false)
-const errorMessage = ref('')
-const router = useRouter()
+onMounted(() => {
+  const savedEmail = localStorage.getItem('rememberedEmail')
+  if (savedEmail) {
+    form.email = savedEmail
+    rememberMe.value = true
+  }
+})
 
 const handleLogin = async () => {
   errorMessage.value = ''
   loading.value = true
-  
+
   try {
-    const response = await axios.post('http://127.0.0.1:5000/api/login', {
+    const response = await axios.post('/api/login', {
       email: form.email,
       password: form.password
     })
-    
+
     if (response.data.success) {
+      if (rememberMe.value) {
+        localStorage.setItem('rememberedEmail', form.email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
+
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
-      
+
       router.push('/Profile')
     }
   } catch (error) {
@@ -213,7 +215,9 @@ const handleLogin = async () => {
   margin-bottom: 30px;
 }
 
-.leaf, .heart, .sun {
+.leaf,
+.heart,
+.sun {
   position: absolute;
   font-size: 40px;
   animation: float 3s ease-in-out infinite;
@@ -238,8 +242,15 @@ const handleLogin = async () => {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .login-illustration h1 {
@@ -327,8 +338,8 @@ const handleLogin = async () => {
   pointer-events: none;
 }
 
-.form-input:focus + label,
-.form-input:not(:placeholder-shown) + label {
+.form-input:focus+label,
+.form-input:not(:placeholder-shown)+label {
   top: -8px;
   left: 16px;
   font-size: 12px;
@@ -397,11 +408,11 @@ const handleLogin = async () => {
   transition: all 0.3s;
 }
 
-.checkbox-container:hover input ~ .checkmark {
+.checkbox-container:hover input~.checkmark {
   border-color: #667eea;
 }
 
-.checkbox-container input:checked ~ .checkmark {
+.checkbox-container input:checked~.checkmark {
   background-color: #667eea;
   border-color: #667eea;
 }
@@ -412,7 +423,7 @@ const handleLogin = async () => {
   display: none;
 }
 
-.checkbox-container input:checked ~ .checkmark:after {
+.checkbox-container input:checked~.checkmark:after {
   display: block;
   left: 6px;
   top: 2px;
@@ -487,7 +498,9 @@ const handleLogin = async () => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -588,6 +601,7 @@ const handleLogin = async () => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -600,15 +614,15 @@ const handleLogin = async () => {
     flex-direction: column;
     max-width: 400px;
   }
-  
+
   .login-illustration {
     padding: 30px;
   }
-  
+
   .login-form-section {
     padding: 30px;
   }
-  
+
   .social-login {
     grid-template-columns: 1fr;
   }
