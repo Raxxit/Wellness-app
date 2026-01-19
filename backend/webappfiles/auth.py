@@ -362,3 +362,35 @@ def submit_wellness():
         "diagnosis": diag_name, 
         "advice": diagnosis.advice_text if diagnosis else ""
     })
+
+
+@auth_bp.route('/wellness-history', methods=['GET'])
+def wellness_history():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"message": "Authorization required"}), 401
+    
+    try:
+
+        token = auth_header.split(' ')[1]
+        decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        current_user_id = decoded['user_id']
+    except:
+        return jsonify({"message": "Invalid token"}), 401
+
+
+    results = WellnessResult.query.filter_by(user_id=current_user_id)\
+        .order_by(WellnessResult.generated_at.desc())\
+        .all()
+    
+    history_data = []
+    for r in results:
+        history_data.append({
+            "id": r.result_id,
+            "score": r.total_score,
+            "diagnosis": r.diagnosis_snapshot, # e.g., "High Wellness"
+            # Format datetime to string (YYYY-MM-DD)
+            "date": r.generated_at.strftime("%Y-%m-%d") if r.generated_at else "N/A"
+        })
+        
+    return jsonify(history_data), 200

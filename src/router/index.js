@@ -8,6 +8,7 @@ import resources from '@/views/resources.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
 import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
 import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
+import Report from '@/views/Report.vue'
 
 
 const router = createRouter({
@@ -64,6 +65,12 @@ const router = createRouter({
             path: '/dynamicques',
             name: 'dynamicques',
             component: DynamicQuestionnaire
+        },
+        {
+            path: '/report',
+            name: 'report',
+            component: Report
+
         },
 
 

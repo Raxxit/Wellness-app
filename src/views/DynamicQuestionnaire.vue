@@ -1,24 +1,26 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router'; // Import Router
 import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 
+const router = useRouter(); // Initialize Router
 const questions = ref([]);
 const answers = ref({});
+const isLoading = ref(false);
 
-
+// Helper to split emojis from text (e.g., "😴 Sleep" -> {icon: "😴", text: "Sleep"})
 const splitEmoji = (str) => {
+    if (!str) return { icon: null, text: '' };
     const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
     const match = str.match(emojiRegex);
     if (match && str.indexOf(match[0]) === 0) {
-        // Emoji is at the start
-        const icon = match[0];
-        const text = str.replace(icon, '').trim();
-        return { icon, text };
+        return { icon: match[0], text: str.replace(match[0], '').trim() };
     }
     return { icon: null, text: str };
 };
 
+// Handle selection logic
 const toggle = (qId, optId, isMulti) => {
     if (!answers.value[qId]) answers.value[qId] = isMulti ? [] : null;
 
@@ -37,42 +39,42 @@ const isSelected = (qId, optId) => {
     return Array.isArray(val) ? val.includes(optId) : val === optId;
 };
 
+// Load Questions
 onMounted(async () => {
-    const res = await fetch('/api/questionnaire');
-    questions.value = await res.json();
+    try {
+        const res = await fetch('/api/questionnaire');
+        questions.value = await res.json();
 
-    questions.value.forEach(q => {
-        if (['0', '3', '4'].includes(q.type)) answers.value[q.id] = [];
-        else if (q.type === '2') answers.value[q.id] = 5;
-        else answers.value[q.id] = null;
-    });
+        // Initialize default answer structures
+        questions.value.forEach(q => {
+            if (['0', '3', '4'].includes(String(q.type))) answers.value[q.id] = [];
+            else if (String(q.type) === '2') answers.value[q.id] = 5; // Default slider value
+            else answers.value[q.id] = null;
+        });
 
-    new wowModule.WOW().init();
+        new wowModule.WOW().init();
+    } catch (e) {
+        console.error("Error loading questions", e);
+    }
 });
 
-
+// Submit Logic
 const submit = async () => {
+    isLoading.value = true;
     try {
         const token = localStorage.getItem('token');
+        if (!token) return alert("You must be logged in to submit.");
 
-        if (!token) {
-            alert("You must be logged in to submit.");
-            return;
-        }
-
-
+        // Extract Option IDs for the backend to calculate score
         let selectedOptionIds = [];
-
         for (const [qId, ans] of Object.entries(answers.value)) {
             if (Array.isArray(ans)) {
                 selectedOptionIds.push(...ans);
             } else if (typeof ans === 'number' && ans > 10) {
-
+                // Ensure we capture radio/slider values that are Option IDs
                 selectedOptionIds.push(ans);
             }
         }
-
-        console.log("Submitting IDs:", selectedOptionIds);
 
         const response = await fetch('/api/submit-wellness', {
             method: 'POST',
@@ -89,7 +91,8 @@ const submit = async () => {
         const result = await response.json();
 
         if (response.ok) {
-            alert(`Assessment Complete!\nDiagnosis: ${result.diagnosis}\nScore: ${result.score}`);
+            // SUCCESS: Redirect to the Report Page
+            router.push('/report');
         } else {
             alert('Error: ' + result.message);
         }
@@ -97,10 +100,10 @@ const submit = async () => {
     } catch (error) {
         console.error("Submission failed:", error);
         alert("An error occurred while submitting.");
+    } finally {
+        isLoading.value = false;
     }
 };
-
-
 </script>
 
 <template>
@@ -158,9 +161,7 @@ const submit = async () => {
                         <div class="energy-bar mx-auto mb-2 bg-light rounded" style="height: 60px; width: 30px;">
                         </div>
                         <select class="form-select form-select-sm" @change="(e) => {
-                            // Initialize object if needed
                             if (!answers[q.id] || Array.isArray(answers[q.id])) answers[q.id] = {};
-                            // Set key (Morning/Afternoon) to value (Low/Med/High)
                             answers[q.id][opt.text] = e.target.value;
                         }">
                             <option value="low">Low</option>
@@ -186,10 +187,17 @@ const submit = async () => {
         </div>
 
         <div class="text-center mt-5">
-            <button @click="submit" class="btn btn-primary btn-lg rounded-pill px-5">Submit</button>
+            <button @click="submit" :disabled="isLoading" class="btn btn-primary btn-lg rounded-pill px-5">
+                <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ isLoading ? 'Processing...' : 'Submit Assessment' }}
+            </button>
         </div>
     </div>
 </template>
+
+
+
+
 <style scoped>
 .goal-card {
     cursor: pointer;
