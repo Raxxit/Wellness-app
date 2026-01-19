@@ -7,11 +7,14 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+
 import slide1 from "@/assets/img/1.png";
 import slide2 from "@/assets/img/3.png";
 
 
+import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
+
 
 const modules = [Navigation, Pagination, Autoplay];
 
@@ -30,12 +33,8 @@ const services = [
   },
 ];
 
-onMounted(async () => {
-
-  const wowModule = await import("wowjs");
-
-  const WOW = wowModule.default || wowModule;
-
+onMounted(() => {
+  const WOW = wowModule.WOW || wowModule.default.WOW;
   new WOW().init();
 });
 </script>
