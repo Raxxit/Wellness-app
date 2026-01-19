@@ -1,9 +1,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { RouterLink, useRouter, useRoute } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 
 const router = useRouter();
-const route = useRoute();
 
 const isNavOpen = ref(false);
 const isLoggedIn = ref(false);
