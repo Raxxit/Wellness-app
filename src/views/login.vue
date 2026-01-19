@@ -1,3 +1,46 @@
+<script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+
+const form = reactive({
+  email: '',
+  password: ''
+})
+
+const loading = ref(false)
+const errorMessage = ref('')
+const router = useRouter()
+
+const handleLogin = async () => {
+  errorMessage.value = ''
+  loading.value = true
+
+  try {
+    const response = await axios.post('/api/login', {
+      email: form.email,
+      password: form.password
+    })
+
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+
+      router.push('/Profile')
+    }
+  } catch (error) {
+    if (error.response?.data?.message) {
+      errorMessage.value = error.response.data.message
+    } else {
+      errorMessage.value = 'Login failed. Please try again.'
+    }
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+
 <template>
   <div class="login-wrapper">
     <div class="login-card">
@@ -115,47 +158,7 @@
   </div>
 </template>
 
-<script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
 
-const form = reactive({
-  email: '',
-  password: ''
-})
-
-const loading = ref(false)
-const errorMessage = ref('')
-const router = useRouter()
-
-const handleLogin = async () => {
-  errorMessage.value = ''
-  loading.value = true
-
-  try {
-    const response = await axios.post('/api/login', {
-      email: form.email,
-      password: form.password
-    })
-
-    if (response.data.success) {
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
-
-      router.push('/Profile')
-    }
-  } catch (error) {
-    if (error.response?.data?.message) {
-      errorMessage.value = error.response.data.message
-    } else {
-      errorMessage.value = 'Login failed. Please try again.'
-    }
-  } finally {
-    loading.value = false
-  }
-}
-</script>
 
 
 <style scoped>
