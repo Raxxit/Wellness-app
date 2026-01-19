@@ -15,16 +15,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:5000', // Points to your local Flask backend
-        changeOrigin: true,
-        secure: false,
-        // We do NOT need to rewrite the path because your Flask app 
-        // expects /api in the URL (defined in __init__.py)
-      }
-    }
-  }
-
 })

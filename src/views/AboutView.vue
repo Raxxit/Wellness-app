@@ -1,12 +1,12 @@
 <script setup>
 import { onMounted } from "vue";
+import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 
 import aboutImage from "@/assets/img/4.jpg";
 
-onMounted(async () => {
-  const wowModule = await import("wowjs");
-  const WOW = wowModule.default || wowModule;
+onMounted(() => {
+  const WOW = wowModule.WOW || wowModule.default.WOW;
   new WOW().init();
 });
 </script>

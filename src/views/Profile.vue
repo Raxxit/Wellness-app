@@ -1,5 +1,7 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { WOW } from "wowjs";
 import "wowjs/css/libs/animate.css";
 
 const router = useRouter();
@@ -311,12 +313,6 @@ const handleSubmit = async () => {
     isSaving.value = false;
   }
 };
-
-onMounted(async () => {
-  const wowModule = await import("wowjs");
-  const WOW = wowModule.default || wowModule;
-  new WOW().init();
-});
 
 const handleLogout = async () => {
   try {
