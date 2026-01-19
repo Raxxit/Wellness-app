@@ -5,17 +5,18 @@ import QuestionnaireView from '@/views/questionnaireView.vue'
 import Profile from '@/views/Profile.vue'
 import login from '@/views/login.vue'
 import resources from '@/views/resources.vue'
+import RegistrationView from '@/views/RegistrationView.vue'
 
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
-        { 
-            path: '/', 
-            name: 'home', 
-            component: HomeView 
+        {
+            path: '/',
+            name: 'home',
+            component: HomeView
         },
-        
+
         {
             path: '/about',
             name: 'about',
@@ -31,20 +32,20 @@ const router = createRouter({
         {
             path: '/register',
             name: 'register',
-            component: () => import('../views/RegistrationView.vue')
+            component: RegistrationView
         },
 
         {
             path: '/login',
             name: 'login',
-            component: () => import('../views/login.vue')
+            component: login
         },
 
         {
             path: '/profile',
             name: 'profile',
-            component: () => import('../views/Profile.vue'),
-            meta: { requiresAuth: true } 
+            component: Profile,
+            meta: { requiresAuth: true }
         },
 
         {
@@ -52,25 +53,25 @@ const router = createRouter({
             name: 'resources',
             component: resources
         },
-        
 
 
 
 
 
-    
+
+
     ]
 })
 
 router.beforeEach((to, from, next) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-    
+
     const isAuthenticated = localStorage.getItem('token') !== null
-    
+
     if (requiresAuth && !isAuthenticated) {
-        next({ 
+        next({
             name: 'login',
-            query: { redirect: to.fullPath } 
+            query: { redirect: to.fullPath }
         })
     } else if (to.name === 'login' && isAuthenticated) {
         next({ name: 'profile' })

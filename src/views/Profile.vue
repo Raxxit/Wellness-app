@@ -207,7 +207,7 @@ const fetchUserProfile = async () => {
       return;
     }
 
-    const response = await fetch('http://127.0.0.1:5000/api/profile', {
+    const response = await fetch('/api/profile', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
