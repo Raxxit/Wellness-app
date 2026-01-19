@@ -84,7 +84,6 @@ const validateAge = () => {
   validationErrors.age = '';
   
   if (formData.age === '') {
-    // Age is optional, so empty is valid
     return true;
   }
   
@@ -106,7 +105,6 @@ const validateAge = () => {
 const validateGender = () => {
   validationErrors.gender = '';
   
-  // Gender is optional, so always valid
   return true;
 };
 
@@ -114,7 +112,6 @@ const validatePassword = () => {
   validationErrors.password = '';
   
   if (!formData.password) {
-    // Password is optional, so empty is valid
     return true;
   }
   

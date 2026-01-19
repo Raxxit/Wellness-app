@@ -25,7 +25,7 @@ const handleSubmit = async () => {
   data.append('password', formData.value.password);
   try {
 
-    const response = await axios.post('http://127.0.0.1:5000/api/register', data);
+    const response = await axios.post('api/register', data);
 
     if (response.status === 200) {
       alert('Registration successful!');
