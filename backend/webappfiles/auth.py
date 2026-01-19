@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 from .extensions import db
-from .models import User
+from .models import User, Question, QuestionOption, WellnessResult, DiagnosisLogic
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -236,3 +236,129 @@ def register():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+
+
+    
+
+    # 1. ADMIN: Add a new Question
+@auth_bp.route('/add-question', methods=['POST'])
+def add_question():
+    data = request.json
+    
+    # Create the Question
+    new_q = Question(
+        question_text=data['text'],
+        type=data['type'],
+        is_active=True
+    )
+    db.session.add(new_q)
+    db.session.flush() # Flush to get the new question_id before committing
+    
+    for opt in data['options']:
+        new_opt = QuestionOption(
+            question_id=new_q.question_id,
+            option_text=opt['text'],
+            weight=int(opt['weight'])
+        )
+        db.session.add(new_opt)
+        
+    db.session.commit()
+    return jsonify({"message": "Question added", "id": new_q.question_id})
+
+# 2. USER: Get Questionnaire
+@auth_bp.route('/questionnaire', methods=['GET'])
+def get_questionnaire():
+    questions = Question.query.filter_by(is_active=True).all()
+    output = []
+    
+    for q in questions:
+        options = [{'id': o.option_id, 'text': o.option_text, 'weight': o.weight} for o in q.options]
+        output.append({
+            'id': q.question_id,
+            'text': q.question_text,
+            'type': q.type,
+            'options': options
+        })
+        
+    return jsonify(output)
+
+@auth_bp.route('/submit-wellness', methods=['POST'])
+def submit_wellness():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"message": "Authorization required"}), 401
+    
+    try:
+        token = auth_header.split(' ')[1]
+        decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id = decoded['user_id']
+    except:
+        return jsonify({"message": "Invalid token"}), 401
+
+    data = request.json
+    selected_option_ids = data.get('selected_options', [])
+    
+    total_score = 0
+    if selected_option_ids:
+        selected_options = QuestionOption.query.filter(
+            QuestionOption.option_id.in_(selected_option_ids)
+        ).all()
+        total_score = sum(opt.weight for opt in selected_options)
+    
+
+    diagnosis = DiagnosisLogic.query.filter(
+        DiagnosisLogic.min_score <= total_score,
+        DiagnosisLogic.max_score >= total_score
+    ).first()
+    
+    diag_name = diagnosis.diagnosis_name if diagnosis else "General Wellness"
+    advice = diagnosis.advice_text if diagnosis else "Keep maintaining a healthy lifestyle."
+    
+    try:
+        result = WellnessResult(
+            user_id=user_id, 
+            total_score=total_score,
+            diagnosis_snapshot=diag_name
+        )
+        db.session.add(result)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "score": total_score, 
+            "diagnosis": diag_name, 
+            "advice": advice
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    data = request.json
+    selected_option_ids = data.get('selected_options', [])
+    
+    total_score = 0
+    if selected_option_ids:
+        selected_options = QuestionOption.query.filter(QuestionOption.option_id.in_(selected_option_ids)).all()
+        total_score = sum(opt.weight for opt in selected_options)
+    
+    diagnosis = DiagnosisLogic.query.filter(
+        DiagnosisLogic.min_score <= total_score,
+        DiagnosisLogic.max_score >= total_score
+    ).first()
+    
+    diag_name = diagnosis.diagnosis_name if diagnosis else "Unknown"
+    
+    result = WellnessResult(
+        user_id=data.get('user_id'),
+        total_score=total_score,
+        diagnosis_snapshot=diag_name
+    )
+    db.session.add(result)
+    db.session.commit()
+    
+    return jsonify({
+        "score": total_score, 
+        "diagnosis": diag_name, 
+        "advice": diagnosis.advice_text if diagnosis else ""
+    })
