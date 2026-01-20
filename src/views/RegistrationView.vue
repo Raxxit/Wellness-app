@@ -14,65 +14,87 @@ const formData = reactive({
   password: '',
   confirmPassword: '',
   age: '',
-  gender: '',
+  gender: '', // starts as empty string
 });
 
 const isLoading = ref(false);
-const feedbackMessage = ref({ text: '', type: '' }); // type: 'success' | 'error'
+const feedbackMessage = ref({ text: '', type: '' });
+
+// --- HELPER: Email Regex ---
+const isValidEmail = (email) => {
+  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+};
 
 // --- ACTIONS ---
 const handleSubmit = async () => {
   feedbackMessage.value = { text: '', type: '' };
 
-  // 1. Basic Validation
-  if (formData.password !== formData.confirmPassword) {
-    feedbackMessage.value = { text: "Passwords do not match.", type: 'error' };
+  // --- 1. SANITIZATION (Keep this!) ---
+  const cleanUsername = formData.username.trim();
+  const cleanEmail = formData.email.trim().toLowerCase();
+  const cleanAge = parseInt(formData.age);
+  const cleanGender = parseInt(formData.gender);
+
+  // --- 2. VALIDATION (Keep this!) ---
+  if (!cleanUsername || cleanUsername.length < 2) {
+    feedbackMessage.value = { text: "Username must be at least 2 characters.", type: 'error' };
+    return;
+  }
+  if (!isValidEmail(cleanEmail)) {
+    feedbackMessage.value = { text: "Please enter a valid email address.", type: 'error' };
+    return;
+  }
+  if (isNaN(cleanAge) || cleanAge < 13 || cleanAge > 120) {
+    feedbackMessage.value = { text: "Please enter a valid age (13-120).", type: 'error' };
+    return;
+  }
+  if (isNaN(cleanGender)) {
+    feedbackMessage.value = { text: "Please select a gender.", type: 'error' };
     return;
   }
   if (formData.password.length < 6) {
     feedbackMessage.value = { text: "Password must be at least 6 characters.", type: 'error' };
     return;
   }
+  if (formData.password !== formData.confirmPassword) {
+    feedbackMessage.value = { text: "Passwords do not match.", type: 'error' };
+    return;
+  }
 
+  // --- 3. PREPARE FORM DATA (Changed from JSON) ---
   isLoading.value = true;
 
-  // 2. Prepare Payload (Match Backend Expectations)
-  const payload = {
-    username: formData.username,
-    email: formData.email,
-    password: formData.password,
-    age: parseInt(formData.age),
-    gender: parseInt(formData.gender)
-  };
+  const dataPayload = new FormData();
+  dataPayload.append('username', cleanUsername);
+  dataPayload.append('email', cleanEmail);
+  dataPayload.append('password', formData.password);
+  dataPayload.append('age', cleanAge);
+  dataPayload.append('gender', cleanGender);
 
   try {
-    // 3. API Call
+    // --- 4. API CALL (Changed headers) ---
     const response = await fetch('/api/register', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
+      // NO HEADERS needed. The browser sets 'Content-Type: multipart/form-data' automatically.
+      body: dataPayload
     });
 
+    // We still receive a JSON response from the server (status messages), 
+    // but we SENT Form Data.
     const data = await response.json();
 
     if (response.ok && data.success) {
       feedbackMessage.value = { text: "Registration successful! Redirecting...", type: 'success' };
-      // Clear form
       Object.keys(formData).forEach(key => formData[key] = '');
-
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      setTimeout(() => { router.push('/login'); }, 2000);
     } else {
       feedbackMessage.value = { text: data.message || "Registration failed.", type: 'error' };
     }
 
   } catch (error) {
     console.error("Registration error:", error);
-    feedbackMessage.value = { text: "Cannot connect to server. Is Flask running?", type: 'error' };
+    feedbackMessage.value = { text: "Cannot connect to server.", type: 'error' };
   } finally {
     isLoading.value = false;
   }
@@ -88,7 +110,6 @@ onMounted(() => {
 
 <template>
   <div class="registration-page">
-
     <header class="py-5 bg-light border-bottom">
       <div class="container text-center">
         <h1 class="display-4 fw-bold text-primary" data-aos="fade-up">Begin Your Wellness Journey</h1>
@@ -185,7 +206,7 @@ onMounted(() => {
                         <i class="fa fa-venus-mars text-primary me-2"></i>Gender
                       </label>
                       <select class="form-control form-control-lg" id="gender" v-model="formData.gender" required>
-                        <option value="">Select</option>
+                        <option value="" disabled selected>Select</option>
                         <option value="1">Male</option>
                         <option value="2">Female</option>
                         <option value="3">Other</option>
@@ -240,7 +261,6 @@ onMounted(() => {
         </div>
       </div>
     </section>
-
   </div>
 </template>
 

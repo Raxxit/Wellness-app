@@ -200,43 +200,55 @@ def health():
 
 
 
-
-
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    # 1. Validation: Ensure we actually received form data
+    if not request.form:
+         return jsonify({"success": False, "message": "No form data received"}), 400
+
+    # 2. Extract Data using request.form
     username = request.form.get('username')
     email = request.form.get('email')
-    age = request.form.get('age', type=int)
-    gender = request.form.get('gender', type=int)
     password = request.form.get('password')
+    
+    # 3. Convert types (FormData sends strings, we need Integers)
+    age = request.form.get('age', type=int) 
+    gender = request.form.get('gender', type=int)
 
+    # 4. Logic Validation
     if not username or not email or not password:
-        return jsonify({"message": "Missing required fields"}), 400
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
 
     if User.query.filter_by(email=email).first():
-        return jsonify({"message": "Email already exists"}), 409
+        return jsonify({"success": False, "message": "Email already exists"}), 409
 
     hashed_pw = generate_password_hash(password)
 
     new_user = User(
         username=username,
         email=email,
-        age=age,
-        gender=gender,
+        age=age, # This is now safely an int or None
+        gender=gender, # This is now safely an int or None
         password_hash=hashed_pw
     )
 
     try:
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "User registered successfully"}), 200
+        
+        # We still return JSON so the Frontend knows if it worked or not
+        return jsonify({
+            "success": True, 
+            "message": "User registered successfully"
+        }), 200
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-    
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
-    
+
+
 
     # 1. ADMIN: Add a new Question
 @auth_bp.route('/add-question', methods=['POST'])

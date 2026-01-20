@@ -9,7 +9,7 @@ import "aos/dist/aos.css";
 // --- STATE ---
 const userName = ref('User');
 const dbStats = ref({ assessments: 0 });
-const streak = ref(12);
+const streak = ref(0);
 
 // To-Do List State
 const tasks = ref([]);
