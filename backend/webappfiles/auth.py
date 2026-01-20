@@ -204,7 +204,7 @@ def health():
 def register():
     # 1. Validation: Ensure we actually received form data
     if not request.form:
-         return jsonify({"success": False, "message": "No form data received"}), 400
+        return jsonify({"success": False, "message": "No form data received"}), 400
 
     # 2. Extract Data using request.form
     username = request.form.get('username')

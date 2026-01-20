@@ -6,7 +6,7 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SECRET_KEY'] = 'your-super-secret-key-change-this'
+    app.config['SECRET_KEY'] = 'superdummy8294r92y498'
     
     # Use relative path for SQLite
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/wellness.db'
@@ -21,9 +21,5 @@ def create_app():
     from .auth import auth_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api')
-
-    # Skip db.create_all() if it causes issues
-    # with app.app_context():
-    #     db.create_all()
 
     return app
