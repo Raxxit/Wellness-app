@@ -106,7 +106,7 @@ watch(tasks, (newVal) => {
             </div>
         </header>
 
-        <div class="container-fluid flex-grow-1 p-4 bg-light">
+        <div class="container-fluid grow p-4 bg-light">
             <div class="row h-100 g-4">
 
                 <div class="col-lg-4 d-flex flex-column gap-4 wow fadeInLeft">
@@ -154,7 +154,7 @@ watch(tasks, (newVal) => {
                     </div>
 
                     <div
-                        class="card border-0 shadow-sm bg-primary text-white p-4 flex-grow-1 d-flex justify-content-center align-items-center text-center">
+                        class="card border-0 shadow-sm bg-primary text-white p-4 grow d-flex justify-content-center align-items-center text-center">
                         <div>
                             <i class="bi bi-quote fs-1 opacity-50"></i>
                             <h4 class="fw-light fst-italic mb-3">"Happiness is not something ready made. It comes from
@@ -199,7 +199,7 @@ watch(tasks, (newVal) => {
                                 </div>
                             </div>
 
-                            <div class="flex-grow-1 overflow-auto p-3 custom-scrollbar">
+                            <div class="grow overflow-auto p-3 custom-scrollbar">
                                 <div v-if="tasks.length === 0"
                                     class="h-100 d-flex flex-column align-items-center justify-content-center text-muted opacity-50">
                                     <i class="bi bi-clipboard2-check fs-1 mb-2"></i>
@@ -213,7 +213,7 @@ watch(tasks, (newVal) => {
                                         <input class="form-check-input fs-5 me-3 rounded-circle" type="checkbox"
                                             v-model="task.completed" style="cursor: pointer;">
 
-                                        <div class="flex-grow-1">
+                                        <div class="grow">
                                             <div class="fw-bold"
                                                 :class="{ 'text-decoration-line-through text-muted': task.completed }">
                                                 {{ task.title }}

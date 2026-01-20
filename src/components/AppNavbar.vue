@@ -61,7 +61,7 @@ watch(() => route.fullPath, () => {
       <div class="collapse navbar-collapse" :class="{ 'show': isNavOpen }" id="mainNav">
         <ul class="navbar-nav ms-auto align-items-center">
 
-          <li class="nav-item" v-for="item in ['Home', 'Community', 'About']" :key="item">
+          <li class="nav-item" v-for="item in ['Home', 'About', 'Resources']" :key="item">
             <RouterLink class="nav-link custom-link" :to="item === 'Home' ? '/' : `/${item.toLowerCase()}`">
               {{ item }}
             </RouterLink>

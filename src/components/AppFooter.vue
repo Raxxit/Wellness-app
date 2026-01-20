@@ -8,7 +8,7 @@
                             <RouterLink to="/">Home</RouterLink>
                         </li>
                         <li>
-                            <RouterLink to="/community">Community</RouterLink>
+                            <RouterLink to="/">Community</RouterLink>
                         </li>
                         <li>
                             <RouterLink to="/about">About</RouterLink>
@@ -55,7 +55,7 @@
 
             <div class="row copy-footer">
                 <div class="col-sm-6 col-md-3">
-                    &copy; {{ new Date().getFullYear() }} Grafreez.com
+                    &copy; {{ new Date().getFullYear() }} Dummy Corp.
                 </div>
                 <div class="col-sm-6 col-md-3 ms-auto text-end">
                     Created with <i class="fa fa-heart"></i>

@@ -1,35 +1,41 @@
 <script setup>
 import { onMounted } from "vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 
+// Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import "swiper/css/effect-fade"; // Adds a smooth fade transition
 
-
-import slide1 from "@/assets/img/1.png";
-import slide2 from "@/assets/img/3.png";
-
+import slide1 from "@/assets/img/sl1.jpg";
+import slide2 from "@/assets/img/sl2.png";
 
 import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 
+const modules = [Navigation, Pagination, Autoplay, EffectFade];
 
-const modules = [Navigation, Pagination, Autoplay];
-
+// Added icons and color themes to the data
 const services = [
   {
     title: "Stress Management",
-    desc: "Learn effective techniques to manage stress and maintain emotional balance.",
+    desc: "Learn effective techniques to manage stress and maintain emotional balance in daily life.",
+    icon: "bi-lungs-fill",
+    color: "text-primary"
   },
   {
-    title: "Mindfulness & Self-Care",
-    desc: "Practice mindfulness and self-care strategies to improve mental clarity and calm.",
+    title: "Mindfulness",
+    desc: "Practice mindfulness and self-care strategies to improve mental clarity and inner calm.",
+    icon: "bi-flower1",
+    color: "text-success"
   },
   {
     title: "Emotional Support",
-    desc: "Access guidance and resources to support your emotional well-being.",
+    desc: "Access professional guidance and community resources to support your well-being.",
+    icon: "bi-heart-pulse-fill",
+    color: "text-danger"
   },
 ];
 
@@ -41,79 +47,161 @@ onMounted(() => {
 
 <template>
   <div class="home">
-    <div class="slider-container mb-5">
-      <swiper :modules="modules" :slides-per-view="1" navigation :pagination="{ clickable: true }"
-        :autoplay="{ delay: 5000 }" class="my-swiper">
+
+    <div class="slider-wrapper">
+      <swiper :modules="modules" :slides-per-view="1" :effect="'fade'" :pagination="{ clickable: true }"
+        :autoplay="{ delay: 6000, disableOnInteraction: false }" class="hero-swiper">
         <swiper-slide>
-          <div class="slide-content" :style="{ backgroundImage: `url(${slide1})` }"></div>
+          <div class="slide-background" :style="{ backgroundImage: `url(${slide1})` }">
+            <div class="overlay-gradient">
+              <div
+                class="container h-100 d-flex flex-column justify-content-center align-items-center text-center text-white">
+                <h1 class="display-3 fw-bold mb-3 animate__animated animate__fadeInDown">Find Your Inner Peace</h1>
+                <p class="lead mb-4 animate__animated animate__fadeInUp">Your journey to emotional balance and clarity
+                  begins here.</p>
+                <button
+                  class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg animate__animated animate__fadeInUp">Start
+                  Journey</button>
+              </div>
+            </div>
+          </div>
         </swiper-slide>
+
         <swiper-slide>
-          <div class="slide-content" :style="{ backgroundImage: `url(${slide2})` }"></div>
+          <div class="slide-background" :style="{ backgroundImage: `url(${slide2})` }">
+            <div class="overlay-gradient">
+              <div
+                class="container h-100 d-flex flex-column justify-content-center align-items-center text-center text-white">
+                <h1 class="display-3 fw-bold mb-3">You Are Not Alone</h1>
+                <p class="lead mb-4">Join a community dedicated to mental strength and happiness.</p>
+                <button class="btn btn-light btn-lg rounded-pill px-5 shadow-lg text-primary fw-bold">Join
+                  Community</button>
+              </div>
+            </div>
+          </div>
         </swiper-slide>
       </swiper>
     </div>
 
-    <section class="hero-banner bg-primary text-white text-center py-5 mb-5">
-      <div class="container wow fadeInUp" data-wow-delay="0.3s">
-        <h1 class="display-4 font-weight-bold">Welcome to Mental Wellness</h1>
-        <p class="lead">
-          Your journey to emotional balance, clarity, and peace begins here.
-        </p>
-        <button class="btn btn-light btn-lg mt-3">Join Now</button>
-      </div>
-    </section>
+    <section class="services-section py-5 bg-light">
+      <div class="container py-4">
 
-    <section class="services-section py-5">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-4 text-center mb-4 wow fadeInLeft" data-wow-delay="0.4s" v-for="service in services"
+        <div class="text-center mb-5 wow fadeInUp">
+          <h2 class="fw-bold display-6 text-dark">Our Approach</h2>
+          <div class="divider mx-auto bg-primary"></div>
+          <p class="text-muted mt-3 max-w-600 mx-auto">We use evidence-based practices to help you navigate life's
+            challenges.</p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-4 wow fadeInUp" :data-wow-delay="`${index * 0.2}s`" v-for="(service, index) in services"
             :key="service.title">
-            <div class="p-4 border rounded shadow-sm h-100 bg-white">
-              <h3>{{ service.title }}</h3>
-              <p>{{ service.desc }}</p>
+            <div class="service-card p-4 h-100 bg-white text-center position-relative overflow-hidden">
+              <div
+                class="icon-wrapper mb-4 mx-auto shadow-sm rounded-circle d-flex align-items-center justify-content-center">
+                <i :class="['bi fs-2', service.icon, service.color]"></i>
+              </div>
+              <h4 class="mb-3 fw-bold text-dark">{{ service.title }}</h4>
+              <p class="text-muted mb-4">{{ service.desc }}</p>
+              <a href="#" class="stretched-link text-decoration-none fw-bold small text-uppercase letter-spacing-1">
+                Learn More <i class="bi bi-arrow-right ms-1"></i>
+              </a>
             </div>
           </div>
         </div>
       </div>
     </section>
+
+    <section class="py-5 bg-white text-center border-top">
+      <div class="container wow fadeInUp">
+        <h2 class="fw-bold mb-3">Ready to prioritize your mental health?</h2>
+        <p class="text-muted mb-4">Take the first step towards a happier, healthier you today.</p>
+        <button class="btn btn-outline-primary btn-lg rounded-pill px-5">Get Started Free</button>
+      </div>
+    </section>
+
   </div>
 </template>
 
 <style scoped>
-.my-swiper {
+/* --- HERO / SLIDER STYLES --- */
+.hero-swiper {
   width: 100%;
-  /* Default for Mobile */
-  height: 50vh;
-  min-height: 400px;
+  height: 85vh;
+  /* Full screen impact */
+  min-height: 500px;
 }
 
-/* For Desktop */
-@media (min-width: 768px) {
-  .my-swiper {
-    height: 70vh;
-    /* Taller on desktop */
-  }
-}
-
-/* Make text readable */
-.overlay {
-  background: rgba(0, 0, 0, 0.5);
-  /* Slightly darker for better contrast */
-  padding: 2rem;
-  color: white;
-  border-radius: 10px;
-  backdrop-filter: blur(5px);
-  /* Adds a modern "frosted glass" effect */
-}
-
-.slide-content {
+.slide-background {
   width: 100%;
   height: 100%;
   background-size: cover;
   background-position: center;
+  position: relative;
+}
+
+/* Dark gradient overlay to make text readable on any image */
+.overlay-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+}
+
+/* --- TYPOGRAPHY & UTILS --- */
+.divider {
+  width: 60px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.max-w-600 {
+  max-width: 600px;
+}
+
+.letter-spacing-1 {
+  letter-spacing: 1px;
+}
+
+/* --- SERVICE CARDS --- */
+.service-card {
+  border-radius: 15px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  /* Very subtle border */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: #f8f9fa;
+  transition: background 0.3s ease;
+}
+
+.service-card:hover .icon-wrapper {
+  background: #e9ecef;
+}
+
+/* --- SWIPER CUSTOMIZATION --- */
+/* You can target internal swiper classes if needed */
+:deep(.swiper-pagination-bullet) {
+  background: white;
+  opacity: 0.6;
+}
+
+:deep(.swiper-pagination-bullet-active) {
+  background: white;
+  opacity: 1;
+  transform: scale(1.2);
 }
 </style>
