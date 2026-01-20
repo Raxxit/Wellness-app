@@ -423,3 +423,21 @@ def dashboard_stats():
     return jsonify({
         "assessments_completed": assessment_count
     }), 200
+
+
+@auth_bp.route('/delete-question/<int:q_id>', methods=['DELETE'])
+def delete_question(q_id):
+    try:
+        # Find the question
+        question = Question.query.get(q_id)
+        if not question:
+            return jsonify({"success": False, "message": "Question not found"}), 404
+            
+        QuestionOption.query.filter_by(question_id=q_id).delete()
+        db.session.delete(question)
+        db.session.commit()
+        
+        return jsonify({"success": True, "message": "Question deleted"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
