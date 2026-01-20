@@ -6,6 +6,10 @@ import Profile from '@/views/Profile.vue'
 import login from '@/views/login.vue'
 import resources from '@/views/resources.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
+import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
+import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
+import Report from '@/views/Report.vue'
+import Dashboard from '@/views/Dashboard.vue'
 
 
 const router = createRouter({
@@ -13,8 +17,15 @@ const router = createRouter({
     routes: [
         {
             path: '/',
-            name: 'home',
-            component: HomeView
+            name: 'Home',
+            component: HomeView,
+            beforeEnter: (to, from, next) => {
+                if (localStorage.getItem('token')) {
+                    next('/dashboard'); // Redirect if token exists
+                } else {
+                    next(); // Continue to Home if no token
+                }
+            }
         },
 
         {
@@ -53,10 +64,27 @@ const router = createRouter({
             name: 'resources',
             component: resources
         },
+        {
+            path: '/questions',
+            name: 'questions',
+            component: AdminQuestionManager
+        },
+        {
+            path: '/dynamicques',
+            name: 'dynamicques',
+            component: DynamicQuestionnaire
+        },
+        {
+            path: '/report',
+            name: 'report',
+            component: Report
 
-
-
-
+        },
+        {
+            path: '/dashboard',
+            name: 'dashboard',
+            component: Dashboard
+        },
 
 
 

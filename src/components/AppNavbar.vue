@@ -50,7 +50,7 @@ watch(() => route.fullPath, () => {
 
       <RouterLink class="navbar-brand fw-bold d-flex align-items-center" to="/">
         <span class="brand-icon me-2">🍃</span>
-        Wellness<span class="text-primary">App</span>
+        Mind<span class="text-primary">Sync</span>
       </RouterLink>
 
       <button class="navbar-toggler border-0 p-0" type="button" @click="isNavOpen = !isNavOpen" aria-controls="mainNav"
@@ -61,7 +61,7 @@ watch(() => route.fullPath, () => {
       <div class="collapse navbar-collapse" :class="{ 'show': isNavOpen }" id="mainNav">
         <ul class="navbar-nav ms-auto align-items-center">
 
-          <li class="nav-item" v-for="item in ['Home', 'Community', 'About']" :key="item">
+          <li class="nav-item" v-for="item in ['Home', 'About', 'Resources']" :key="item">
             <RouterLink class="nav-link custom-link" :to="item === 'Home' ? '/' : `/${item.toLowerCase()}`">
               {{ item }}
             </RouterLink>
@@ -119,7 +119,7 @@ watch(() => route.fullPath, () => {
                   </RouterLink>
                 </li>
                 <li>
-                  <RouterLink class="dropdown-item rounded-2 d-flex align-items-center gap-2" to="/questionnaire">
+                  <RouterLink class="dropdown-item rounded-2 d-flex align-items-center gap-2" to="/dynamicques">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                       stroke-linecap="round" stroke-linejoin="round">
                       <polygon
