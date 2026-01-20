@@ -8,23 +8,7 @@
                             <RouterLink to="/">Home</RouterLink>
                         </li>
                         <li>
-                            <RouterLink to="/community">Community</RouterLink>
-                        </li>
-                        <li>
                             <RouterLink to="/about">About</RouterLink>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-2 col-sm-4">
-                    <ul>
-                        <li>
-                            <RouterLink to="/questionnaire">Questionnaire</RouterLink>
-                        </li>
-                        <li>
-                            <RouterLink to="/login">Login</RouterLink>
-                        </li>
-                        <li>
-                            <RouterLink to="/register">Register</RouterLink>
                         </li>
                     </ul>
                 </div>
@@ -43,7 +27,7 @@
                 </div>
 
                 <div class="col-md-6 col-sm-12">
-                    <h2>About our Wellness App</h2>
+                    <h2>About MindSync</h2>
                     <p>
                         To enjoy good health, to bring true happiness to one's family, to bring peace to all, one must
                         first
@@ -55,7 +39,7 @@
 
             <div class="row copy-footer">
                 <div class="col-sm-6 col-md-3">
-                    &copy; {{ new Date().getFullYear() }} Grafreez.com
+                    &copy; {{ new Date().getFullYear() }} Dummy Corp.
                 </div>
                 <div class="col-sm-6 col-md-3 ms-auto text-end">
                     Created with <i class="fa fa-heart"></i>

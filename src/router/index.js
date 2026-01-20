@@ -1,92 +1,94 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
-import QuestionnaireView from '@/views/questionnaireView.vue'
 import Profile from '@/views/Profile.vue'
-import Error400 from '@/views/errors/Error400.vue'
-import Error401 from '@/views/errors/Error401.vue'
-import Error403 from '@/views/errors/Error403.vue'
-import Error404 from '@/views/errors/Error404.vue'
-import Error405 from '@/views/errors/Error405.vue'
-import Error500 from '@/views/errors/Error500.vue'
+import login from '@/views/login.vue'
+import resources from '@/views/resources.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
-import Login from '@/views/login.vue'
+import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
+import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
+import Report from '@/views/Report.vue'
+import Dashboard from '@/views/Dashboard.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
-        { path: '/', name: 'home', component: HomeView },
-
+        {
+            path: '/',
+            name: 'Home',
+            component: HomeView,
+            meta: { guestOnly: true }
+        },
         {
             path: '/about',
             name: 'about',
             component: AboutView
         },
-
-        {
-            path: '/questionnaire',
-            name: 'questionnaire',
-            component: QuestionnaireView
-        },
-
         {
             path: '/register',
             name: 'register',
-            component: RegistrationView
+            component: RegistrationView,
+            meta: { guestOnly: true }
         },
-
-        {
-            path: '/profile',
-            name: 'Profile',
-            component: Profile
-        },
-
-        {
-            path: '/error/400',
-            name: 'Error400',
-            component: Error400
-        },
-
         {
             path: '/login',
             name: 'login',
-            component: Login
+            component: login,
+            meta: { guestOnly: true }
         },
-
         {
-            path: '/error/401',
-            name: 'Error401',
-            component: Error401
+            path: '/profile',
+            name: 'profile',
+            component: Profile,
+            meta: { requiresAuth: true }
         },
-
         {
-            path: '/error/403',
-            name: 'Error403',
-            component: Error403
+            path: '/resources',
+            name: 'resources',
+            component: resources,
         },
-
         {
-            path: '/:pathMatch(.*)*',
-            name: 'Error404',
-            component: Error404
+            path: '/questions',
+            name: 'questions',
+            component: AdminQuestionManager,
+            meta: { requiresAuth: true }
         },
-
         {
-            path: '/error/405',
-            name: 'Error405',
-            component: Error405
+            path: '/dynamicques',
+            name: 'dynamicques',
+            component: DynamicQuestionnaire,
+            meta: { requiresAuth: true }
         },
-
         {
-            path: '/error/500',
-            name: 'Error500',
-            component: Error500
+            path: '/report',
+            name: 'report',
+            component: Report,
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/dashboard',
+            name: 'dashboard',
+            component: Dashboard,
+            meta: { requiresAuth: true }
         },
     ]
 })
 
+router.beforeEach((to, from, next) => {
+    const isAuthenticated = localStorage.getItem('token');
 
+    const requiresAuth = to.meta.requiresAuth;
+    const isGuestOnly = to.meta.guestOnly;
 
-
+    if (requiresAuth && !isAuthenticated) {
+        next('/login');
+    }
+    else if (isGuestOnly && isAuthenticated) {
+        next('/dashboard');
+    }
+    else {
+        next();
+    }
+});
 
 export default router
