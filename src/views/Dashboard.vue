@@ -21,6 +21,12 @@ const progressPercent = computed(() => {
     if (tasks.value.length === 0) return 0;
     return Math.round((activitiesCompleted.value / tasks.value.length) * 100);
 });
+const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+});
 
 // --- ACTIONS ---
 const addTask = () => {
@@ -91,21 +97,21 @@ watch(tasks, (newVal) => {
 <template>
     <div class="dashboard-container d-flex flex-column">
 
-        <header class="d-flex justify-content-between align-items-center px-4 py-3 bg-white border-bottom shadow-sm">
-            <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-grid-fill text-primary me-2"></i>Dashboard
-            </h4>
-            <div class="d-flex align-items-center">
-                <div class="text-end me-3">
-                    <div class="fw-bold text-dark">{{ userName }}</div>
-                    <small class="text-muted">Wellness Journey</small>
-                </div>
-                <div class="avatar-circle bg-primary text-white fw-bold">
-                    {{ userName.charAt(0).toUpperCase() }}
-                </div>
+        <header class="d-flex justify-content-between align-items-end px-4 py-4 bg-white border-bottom shadow-sm mb-3">
+            <div>
+                <h6 class="text-uppercase text-muted small fw-bold ls-1 mb-1">
+                    Wellness Journey
+                </h6>
+                <h2 class="fw-bold text-dark mb-0">
+                    Daily Overview
+                </h2>
+            </div>
+
+            <div class="d-none d-sm-flex align-items-center bg-light rounded-pill px-3 py-2 border">
+                <i class="bi bi-calendar3 text-primary me-2"></i>
+                <span class="fw-semibold text-secondary small">{{ currentDate }}</span>
             </div>
         </header>
-
         <div class="container-fluid grow p-4 bg-light">
             <div class="row h-100 g-4">
 
@@ -213,7 +219,7 @@ watch(tasks, (newVal) => {
                                         <input class="form-check-input fs-5 me-3 rounded-circle" type="checkbox"
                                             v-model="task.completed" style="cursor: pointer;">
 
-                                        <div class="grow">
+                                        <div class="">
                                             <div class="fw-bold"
                                                 :class="{ 'text-decoration-line-through text-muted': task.completed }">
                                                 {{ task.title }}
@@ -295,5 +301,9 @@ watch(tasks, (newVal) => {
         height: auto;
         overflow: auto;
     }
+}
+
+.ls-1 {
+    letter-spacing: 1px;
 }
 </style>

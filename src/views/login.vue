@@ -43,7 +43,9 @@ const handleLogin = async () => {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
 
-      router.push('/Profile')
+      // ▼▼▼ CHANGE THIS LINE ▼▼▼
+      router.push('/dashboard')
+      // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     }
   } catch (error) {
     if (error.response?.data?.message) {

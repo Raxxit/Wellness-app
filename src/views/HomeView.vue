@@ -17,7 +17,6 @@ import "wowjs/css/libs/animate.css";
 
 const modules = [Navigation, Pagination, Autoplay, EffectFade];
 
-// Added icons and color themes to the data
 const services = [
   {
     title: "Stress Management",
@@ -59,9 +58,10 @@ onMounted(() => {
                 <h1 class="display-3 fw-bold mb-3 animate__animated animate__fadeInDown">Find Your Inner Peace</h1>
                 <p class="lead mb-4 animate__animated animate__fadeInUp">Your journey to emotional balance and clarity
                   begins here.</p>
-                <button
-                  class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg animate__animated animate__fadeInUp">Start
-                  Journey</button>
+                <router-link to="Register"
+                  class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg animate__animated animate__fadeInUp">
+                  Start Journey
+                </router-link>
               </div>
             </div>
           </div>
@@ -103,9 +103,10 @@ onMounted(() => {
               </div>
               <h4 class="mb-3 fw-bold text-dark">{{ service.title }}</h4>
               <p class="text-muted mb-4">{{ service.desc }}</p>
-              <a href="#" class="stretched-link text-decoration-none fw-bold small text-uppercase letter-spacing-1">
+              <router-link to="/resources"
+                class="stretched-link text-decoration-none fw-bold small text-uppercase letter-spacing-1">
                 Learn More <i class="bi bi-arrow-right ms-1"></i>
-              </a>
+              </router-link>
             </div>
           </div>
         </div>
@@ -192,8 +193,7 @@ onMounted(() => {
   background: #e9ecef;
 }
 
-/* --- SWIPER CUSTOMIZATION --- */
-/* You can target internal swiper classes if needed */
+
 :deep(.swiper-pagination-bullet) {
   background: white;
   opacity: 0.6;

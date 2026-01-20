@@ -17,8 +17,15 @@ const router = createRouter({
     routes: [
         {
             path: '/',
-            name: 'home',
-            component: HomeView
+            name: 'Home',
+            component: HomeView,
+            beforeEnter: (to, from, next) => {
+                if (localStorage.getItem('token')) {
+                    next('/dashboard'); // Redirect if token exists
+                } else {
+                    next(); // Continue to Home if no token
+                }
+            }
         },
 
         {
