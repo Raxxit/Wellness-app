@@ -62,11 +62,9 @@ def login():
         }), 500
 
 
-# PROFILE UPDATE ROUTE
 @auth_bp.route('/profile/update', methods=['PUT'])
 def update_profile():
     try:
-        # Get authorization token
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({
@@ -76,7 +74,6 @@ def update_profile():
         
         token = auth_header.split(' ')[1]
         
-        # Decode token to get user ID
         try:
             decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
             user_id = decoded['user_id']
@@ -394,3 +391,23 @@ def wellness_history():
         })
         
     return jsonify(history_data), 200
+
+
+@auth_bp.route('/dashboard-stats', methods=['GET'])
+def dashboard_stats():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"message": "Authorization required"}), 401
+    
+    try:
+        token = auth_header.split(' ')[1]
+        decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id = decoded['user_id']
+    except:
+        return jsonify({"message": "Invalid token"}), 401
+
+    assessment_count = WellnessResult.query.filter_by(user_id=user_id).count()
+
+    return jsonify({
+        "assessments_completed": assessment_count
+    }), 200

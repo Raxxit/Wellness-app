@@ -9,6 +9,7 @@ import RegistrationView from '@/views/RegistrationView.vue'
 import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
 import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
 import Report from '@/views/Report.vue'
+import Dashboard from '@/views/Dashboard.vue'
 
 
 const router = createRouter({
@@ -72,10 +73,11 @@ const router = createRouter({
             component: Report
 
         },
-
-
-
-
+        {
+            path: '/dashboard',
+            name: 'dashboard',
+            component: Dashboard
+        },
 
 
 
