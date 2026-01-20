@@ -1,12 +1,12 @@
 <script setup>
 import { onMounted } from "vue";
-import * as wowModule from "wowjs";
 import "wowjs/css/libs/animate.css";
 
 import aboutImage from "@/assets/img/4.jpg";
 
-onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
+onMounted(async () => {
+  const wowModule = await import("wowjs");
+  const WOW = wowModule.default || wowModule;
   new WOW().init();
 });
 </script>
@@ -35,7 +35,7 @@ onMounted(() => {
 
           <div class="col-12 col-md-6 wow fadeInRight" data-wow-delay="0.4s">
             <p class="text-muted">
-              Founded in 2025, MindSync was created with a simple belief:
+              Founded in 2024, WellnessApp was created with a simple belief:
               <strong>Mental well-being should be accessible to everyone.</strong>
             </p>
 
@@ -46,6 +46,10 @@ onMounted(() => {
             </p>
 
             <ul class="list-unstyled mt-4">
+              <li class="mb-2 d-flex align-items-center">
+                <i class="fa fa-check-circle text-primary me-2"></i>
+                Qualified Psychological Doctors
+              </li>
               <li class="mb-2 d-flex align-items-center">
                 <i class="fa fa-check-circle text-primary me-2"></i>
                 Mental Health Awareness & Education
@@ -67,10 +71,13 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Custom tweaks specific to this page only */
+
 .image-wrapper img {
   width: 100%;
   height: auto;
   object-fit: cover;
+  /* Ensures image doesn't stretch weirdly */
   transition: transform 0.3s ease;
 }
 

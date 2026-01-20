@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { WOW } from 'wowjs';
-import 'wowjs/css/libs/animate.css';
+import * as wowModule from "wowjs";
+import "wowjs/css/libs/animate.css";
 
 // --- STATE ---
 const userName = ref('User');
@@ -57,10 +57,12 @@ const removeTask = (id) => {
     tasks.value = tasks.value.filter(t => t.id !== id);
 };
 
-// --- INITIALIZATION ---
 onMounted(async () => {
+    const wowModule = await import("wowjs");
+    const WOW = wowModule.default || wowModule;
     new WOW().init();
-
+});
+onMounted(async () => {
     // 1. Get User Name
     const userStr = localStorage.getItem('user');
     if (userStr) userName.value = JSON.parse(userStr).username || 'User';
