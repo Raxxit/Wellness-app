@@ -121,7 +121,7 @@ const handleSubmit = async () => {
       updateData.password = formData.password;
     }
 
-    const response = await fetch('http://127.0.0.1:5000/api/profile/update', {
+    const response = await fetch('/api/profile/update', {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
