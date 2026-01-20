@@ -1,13 +1,16 @@
 <script setup>
 import { onMounted } from "vue";
-import "wowjs/css/libs/animate.css";
-
 import aboutImage from "@/assets/img/4.jpg";
 
-onMounted(async () => {
-  const wowModule = await import("wowjs");
-  const WOW = wowModule.default || wowModule;
-  new WOW().init();
+// --- AOS Imports ---
+import AOS from "aos";
+import "aos/dist/aos.css";
+
+onMounted(() => {
+  AOS.init({
+    duration: 1000, // Animation speed
+    once: true,     // Animate only once per scroll
+  });
 });
 </script>
 
@@ -15,10 +18,10 @@ onMounted(async () => {
   <div class="about-page">
     <header class="py-5 bg-light border-bottom">
       <div class="container text-center">
-        <h1 class="display-4 fw-bold text-primary wow fadeInUp" data-wow-delay="0.1s">
+        <h1 class="display-4 fw-bold text-primary" data-aos="fade-up" data-aos-delay="100">
           About Us
         </h1>
-        <p class="lead text-secondary wow fadeInUp" data-wow-delay="0.2s">
+        <p class="lead text-secondary" data-aos="fade-up" data-aos-delay="200">
           Empowering your journey to a healthier, happier life.
         </p>
       </div>
@@ -27,13 +30,13 @@ onMounted(async () => {
     <section class="py-5">
       <div class="container">
         <div class="row align-items-center">
-          <div class="col-12 col-md-6 mb-4 mb-md-0 wow fadeInLeft" data-wow-delay="0.3s">
+          <div class="col-12 col-md-6 mb-4 mb-md-0" data-aos="fade-right" data-aos-delay="300">
             <div class="image-wrapper shadow rounded overflow-hidden">
               <img :src="aboutImage" alt="About our mental wellness platform" class="img-fluid" />
             </div>
           </div>
 
-          <div class="col-12 col-md-6 wow fadeInRight" data-wow-delay="0.4s">
+          <div class="col-12 col-md-6" data-aos="fade-left" data-aos-delay="400">
             <p class="text-muted">
               Founded in 2024, WellnessApp was created with a simple belief:
               <strong>Mental well-being should be accessible to everyone.</strong>
@@ -47,15 +50,15 @@ onMounted(async () => {
 
             <ul class="list-unstyled mt-4">
               <li class="mb-2 d-flex align-items-center">
-                <i class="fa fa-check-circle text-primary me-2"></i>
+                <i class="bi bi-check-circle-fill text-primary me-2"></i>
                 Qualified Psychological Doctors
               </li>
               <li class="mb-2 d-flex align-items-center">
-                <i class="fa fa-check-circle text-primary me-2"></i>
+                <i class="bi bi-check-circle-fill text-primary me-2"></i>
                 Mental Health Awareness & Education
               </li>
               <li class="mb-2 d-flex align-items-center">
-                <i class="fa fa-check-circle text-primary me-2"></i>
+                <i class="bi bi-check-circle-fill text-primary me-2"></i>
                 Supportive Community
               </li>
             </ul>
@@ -71,17 +74,13 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Custom tweaks specific to this page only */
-
 .image-wrapper img {
   width: 100%;
   height: auto;
   object-fit: cover;
-  /* Ensures image doesn't stretch weirdly */
   transition: transform 0.3s ease;
 }
 
-/* Hover Effect: Zoom image slightly */
 .image-wrapper:hover img {
   transform: scale(1.05);
 }

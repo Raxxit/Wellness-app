@@ -1,13 +1,15 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import * as wowModule from "wowjs";
-import "wowjs/css/libs/animate.css";
+
+// --- AOS Imports (Replaces WOW.js) ---
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 // --- STATE ---
 const userName = ref('User');
-const dbStats = ref({ assessments: 0 }); // From Database
-const streak = ref(12); // Mock Streak
+const dbStats = ref({ assessments: 0 });
+const streak = ref(12);
 
 // To-Do List State
 const tasks = ref([]);
@@ -30,26 +32,15 @@ const currentDate = new Date().toLocaleDateString('en-US', {
 
 // --- ACTIONS ---
 const addTask = () => {
-    // 1. Debugging: Check if function runs
-    console.log("Attempting to add task...");
+    if (!newTaskInput.value || newTaskInput.value.trim() === '') return;
 
-    // 2. Validation: Ensure text exists and isn't just whitespace
-    if (!newTaskInput.value || newTaskInput.value.trim() === '') {
-        console.log("Input is empty, cancelling.");
-        return;
-    }
-
-    // 3. Add to array
     tasks.value.unshift({
         id: Date.now(),
-        title: newTaskInput.value.trim(), // Trim whitespace
+        title: newTaskInput.value.trim(),
         priority: newPriority.value,
         completed: false
     });
 
-    console.log("Task added!");
-
-    // 4. Clear input
     newTaskInput.value = '';
 };
 
@@ -57,17 +48,19 @@ const removeTask = (id) => {
     tasks.value = tasks.value.filter(t => t.id !== id);
 };
 
+// --- INITIALIZATION (Merged) ---
 onMounted(async () => {
-    const wowModule = await import("wowjs");
-    const WOW = wowModule.default || wowModule;
-    new WOW().init();
-});
-onMounted(async () => {
-    // 1. Get User Name
+    // 1. Initialize AOS
+    AOS.init({
+        duration: 1000,
+        once: true
+    });
+
+    // 2. Get User Name
     const userStr = localStorage.getItem('user');
     if (userStr) userName.value = JSON.parse(userStr).username || 'User';
 
-    // 2. Load Tasks
+    // 3. Load Tasks
     const savedTasks = localStorage.getItem('userTasks');
     if (savedTasks) tasks.value = JSON.parse(savedTasks);
     else tasks.value = [
@@ -75,7 +68,7 @@ onMounted(async () => {
         { id: 2, title: 'Read 10 pages', priority: 'low', completed: true },
     ];
 
-    // 3. Fetch DB Stats
+    // 4. Fetch DB Stats
     const token = localStorage.getItem('token');
     if (token) {
         try {
@@ -114,10 +107,11 @@ watch(tasks, (newVal) => {
                 <span class="fw-semibold text-secondary small">{{ currentDate }}</span>
             </div>
         </header>
+
         <div class="container-fluid grow p-4 bg-light">
             <div class="row h-100 g-4">
 
-                <div class="col-lg-4 d-flex flex-column gap-4 wow fadeInLeft">
+                <div class="col-lg-4 d-flex flex-column gap-4" data-aos="fade-right">
 
                     <div class="row g-3">
                         <div class="col-6">
@@ -172,7 +166,7 @@ watch(tasks, (newVal) => {
                     </div>
                 </div>
 
-                <div class="col-lg-8 wow fadeInRight">
+                <div class="col-lg-8" data-aos="fade-left">
                     <div class="card border-0 shadow-sm h-100 d-flex flex-column">
 
                         <div class="card-header bg-white border-bottom py-3 px-4">
@@ -252,12 +246,9 @@ watch(tasks, (newVal) => {
 </template>
 
 <style scoped>
-/* Full Screen Layout */
 .dashboard-container {
     height: 100vh;
-    /* Fill full viewport height */
     overflow: hidden;
-    /* Prevent global scrollbar */
     background-color: #f4f7f6;
 }
 
@@ -288,7 +279,6 @@ watch(tasks, (newVal) => {
     justify-content: center;
 }
 
-/* Hover effects */
 .task-row:hover {
     background-color: #f8f9fa;
 }
@@ -297,7 +287,6 @@ watch(tasks, (newVal) => {
     opacity: 1 !important;
 }
 
-/* Responsive: Allow scroll on mobile */
 @media (max-width: 991px) {
     .dashboard-container {
         height: auto;

@@ -3,17 +3,18 @@ import { onMounted } from "vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 
+// --- AOS Imports ---
+import AOS from "aos";
+import "aos/dist/aos.css";
+
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import "swiper/css/effect-fade"; // Adds a smooth fade transition
+import "swiper/css/effect-fade";
 
 import slide1 from "@/assets/img/sl1.jpg";
 import slide2 from "@/assets/img/sl2.png";
-
-import * as wowModule from "wowjs";
-import "wowjs/css/libs/animate.css";
 
 const modules = [Navigation, Pagination, Autoplay, EffectFade];
 
@@ -39,8 +40,11 @@ const services = [
 ];
 
 onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
-  new WOW().init();
+  // Initialize AOS
+  AOS.init({
+    duration: 1000,
+    once: true,
+  });
 });
 </script>
 
@@ -55,11 +59,12 @@ onMounted(() => {
             <div class="overlay-gradient">
               <div
                 class="container h-100 d-flex flex-column justify-content-center align-items-center text-center text-white">
-                <h1 class="display-3 fw-bold mb-3 animate__animated animate__fadeInDown">Find Your Inner Peace</h1>
-                <p class="lead mb-4 animate__animated animate__fadeInUp">Your journey to emotional balance and clarity
-                  begins here.</p>
-                <router-link to="Register"
-                  class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg animate__animated animate__fadeInUp">
+                <h1 class="display-3 fw-bold mb-3" data-aos="fade-down">Find Your Inner Peace</h1>
+                <p class="lead mb-4" data-aos="fade-up" data-aos-delay="200">
+                  Your journey to emotional balance and clarity begins here.
+                </p>
+                <router-link to="Register" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg" data-aos="fade-up"
+                  data-aos-delay="400">
                   Start Journey
                 </router-link>
               </div>
@@ -86,7 +91,7 @@ onMounted(() => {
     <section class="services-section py-5 bg-light">
       <div class="container py-4">
 
-        <div class="text-center mb-5 wow fadeInUp">
+        <div class="text-center mb-5" data-aos="fade-up">
           <h2 class="fw-bold display-6 text-dark">Our Approach</h2>
           <div class="divider mx-auto bg-primary"></div>
           <p class="text-muted mt-3 max-w-600 mx-auto">We use evidence-based practices to help you navigate life's
@@ -94,8 +99,8 @@ onMounted(() => {
         </div>
 
         <div class="row g-4">
-          <div class="col-md-4 wow fadeInUp" :data-wow-delay="`${index * 0.2}s`" v-for="(service, index) in services"
-            :key="service.title">
+          <div class="col-md-4" v-for="(service, index) in services" :key="service.title" data-aos="fade-up"
+            :data-aos-delay="index * 200">
             <div class="service-card p-4 h-100 bg-white text-center position-relative overflow-hidden">
               <div
                 class="icon-wrapper mb-4 mx-auto shadow-sm rounded-circle d-flex align-items-center justify-content-center">
@@ -114,7 +119,7 @@ onMounted(() => {
     </section>
 
     <section class="py-5 bg-white text-center border-top">
-      <div class="container wow fadeInUp">
+      <div class="container" data-aos="fade-up">
         <h2 class="fw-bold mb-3">Ready to prioritize your mental health?</h2>
         <p class="text-muted mb-4">Take the first step towards a happier, healthier you today.</p>
         <button class="btn btn-outline-primary btn-lg rounded-pill px-5">Get Started Free</button>
@@ -129,7 +134,6 @@ onMounted(() => {
 .hero-swiper {
   width: 100%;
   height: 85vh;
-  /* Full screen impact */
   min-height: 500px;
 }
 
@@ -141,7 +145,6 @@ onMounted(() => {
   position: relative;
 }
 
-/* Dark gradient overlay to make text readable on any image */
 .overlay-gradient {
   position: absolute;
   top: 0;
@@ -172,7 +175,6 @@ onMounted(() => {
 .service-card {
   border-radius: 15px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  /* Very subtle border */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -192,7 +194,6 @@ onMounted(() => {
 .service-card:hover .icon-wrapper {
   background: #e9ecef;
 }
-
 
 :deep(.swiper-pagination-bullet) {
   background: white;

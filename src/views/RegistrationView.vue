@@ -1,12 +1,14 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import * as wowModule from "wowjs";
-import "wowjs/css/libs/animate.css";
-import axios from 'axios';
-
+import { ref, onMounted, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import AOS from "aos";
+import "aos/dist/aos.css";
 import registrationBg from '@/assets/img/3.png';
 
-const formData = ref({
+const router = useRouter();
+
+// --- STATE ---
+const formData = reactive({
   username: '',
   email: '',
   password: '',
@@ -15,55 +17,92 @@ const formData = ref({
   gender: '',
 });
 
+const isLoading = ref(false);
+const feedbackMessage = ref({ text: '', type: '' }); // type: 'success' | 'error'
+
+// --- ACTIONS ---
 const handleSubmit = async () => {
-  const data = new FormData();
+  feedbackMessage.value = { text: '', type: '' };
 
-  data.append('username', formData.value.username);
-  data.append('email', formData.value.email);
-  data.append('age', formData.value.age);
-  data.append('gender', formData.value.gender);
-  data.append('password', formData.value.password);
+  // 1. Basic Validation
+  if (formData.password !== formData.confirmPassword) {
+    feedbackMessage.value = { text: "Passwords do not match.", type: 'error' };
+    return;
+  }
+  if (formData.password.length < 6) {
+    feedbackMessage.value = { text: "Password must be at least 6 characters.", type: 'error' };
+    return;
+  }
+
+  isLoading.value = true;
+
+  // 2. Prepare Payload (Match Backend Expectations)
+  const payload = {
+    username: formData.username,
+    email: formData.email,
+    password: formData.password,
+    age: parseInt(formData.age),
+    gender: parseInt(formData.gender)
+  };
+
   try {
+    // 3. API Call
+    const response = await fetch('http://127.0.0.1:5000/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
 
-    const response = await axios.post('api/register', data);
+    const data = await response.json();
 
-    if (response.status === 200) {
-      alert('Registration successful!');
+    if (response.ok && data.success) {
+      feedbackMessage.value = { text: "Registration successful! Redirecting...", type: 'success' };
+      // Clear form
+      Object.keys(formData).forEach(key => formData[key] = '');
+
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    } else {
+      feedbackMessage.value = { text: data.message || "Registration failed.", type: 'error' };
     }
+
   } catch (error) {
-    console.error(error);
-    alert('Registration failed');
+    console.error("Registration error:", error);
+    feedbackMessage.value = { text: "Cannot connect to server. Is Flask running?", type: 'error' };
+  } finally {
+    isLoading.value = false;
   }
 };
 
 onMounted(() => {
-  const WOW = wowModule.WOW || wowModule.default.WOW;
-  new WOW().init();
+  AOS.init({
+    duration: 800,
+    once: true
+  });
 });
-
 </script>
-
 
 <template>
   <div class="registration-page">
 
-    <!-- Header Section -->
     <header class="py-5 bg-light border-bottom">
       <div class="container text-center">
-        <h1 class="display-4 fw-bold text-primary wow fadeInUp" data-wow-delay="0.1s">Begin Your Wellness Journey</h1>
-        <p class="lead text-secondary wow fadeInUp" data-wow-delay="0.2s">
+        <h1 class="display-4 fw-bold text-primary" data-aos="fade-up">Begin Your Wellness Journey</h1>
+        <p class="lead text-secondary" data-aos="fade-up" data-aos-delay="100">
           Take the first step towards better mental health and emotional well-being.
         </p>
       </div>
     </header>
 
-    <!-- Registration Form Section -->
     <section class="py-5">
       <div class="container">
         <div class="row align-items-center">
 
-          <!-- Left Side: Benefits -->
-          <div class="col-12 col-md-6 mb-4 mb-md-0 wow fadeInLeft" data-wow-delay="0.3s">
+          <div class="col-12 col-md-6 mb-4 mb-md-0" data-aos="fade-right" data-aos-delay="200">
             <div class="image-wrapper shadow rounded overflow-hidden">
               <img :src="registrationBg" alt="Mental wellness journey" class="img-fluid">
             </div>
@@ -102,16 +141,19 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Right Side: Registration Form -->
-          <div class="col-12 col-md-6 wow fadeInRight" data-wow-delay="0.4s">
+          <div class="col-12 col-md-6" data-aos="fade-left" data-aos-delay="300">
             <div class="card border-0 shadow-lg rounded">
               <div class="card-body p-4 p-md-5">
                 <h2 class="fw-bold mb-2 text-center">Create Your Account</h2>
                 <p class="text-center text-muted mb-4">Join thousands on their path to better mental health</p>
 
+                <div v-if="feedbackMessage.text" class="alert mb-4"
+                  :class="feedbackMessage.type === 'success' ? 'alert-success' : 'alert-danger'">
+                  {{ feedbackMessage.text }}
+                </div>
+
                 <form @submit.prevent="handleSubmit">
 
-                  <!-- Full Name -->
                   <div class="mb-3">
                     <label for="username" class="form-label fw-bold">
                       <i class="fa fa-user text-primary me-2"></i>User Name
@@ -120,7 +162,6 @@ onMounted(() => {
                       placeholder="Enter your user name" required>
                   </div>
 
-                  <!-- Email -->
                   <div class="mb-3">
                     <label for="email" class="form-label fw-bold">
                       <i class="fa fa-envelope text-primary me-2"></i>Email Address
@@ -130,7 +171,6 @@ onMounted(() => {
                     <small class="text-muted">We'll send your wellness reports here</small>
                   </div>
 
-                  <!-- Age and Gender Row -->
                   <div class="row">
                     <div class="col-md-6 mb-3">
                       <label for="age" class="form-label fw-bold">
@@ -146,15 +186,14 @@ onMounted(() => {
                       </label>
                       <select class="form-control form-control-lg" id="gender" v-model="formData.gender" required>
                         <option value="">Select</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                        <option value="prefer-not-to-say">Prefer not to say</option>
+                        <option value="1">Male</option>
+                        <option value="2">Female</option>
+                        <option value="3">Other</option>
+                        <option value="0">Prefer not to say</option>
                       </select>
                     </div>
                   </div>
 
-                  <!-- Password -->
                   <div class="mb-3">
                     <label for="password" class="form-label fw-bold">
                       <i class="fa fa-lock text-primary me-2"></i>Password
@@ -163,7 +202,6 @@ onMounted(() => {
                       v-model="formData.password" placeholder="Create a strong password" required>
                   </div>
 
-                  <!-- Confirm Password -->
                   <div class="mb-4">
                     <label for="confirmPassword" class="form-label fw-bold">
                       <i class="fa fa-lock text-primary me-2"></i>Confirm Password
@@ -172,7 +210,6 @@ onMounted(() => {
                       v-model="formData.confirmPassword" placeholder="Re-enter your password" required>
                   </div>
 
-                  <!-- Privacy Notice -->
                   <div class="alert alert-info mb-4">
                     <small>
                       <i class="fa fa-shield-alt me-2"></i>
@@ -180,15 +217,20 @@ onMounted(() => {
                     </small>
                   </div>
 
-                  <!-- Submit Button -->
-                  <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 shadow-sm btn-lg">
-                    <i class="fa fa-arrow-right me-2"></i>Start My Wellness Journey
+                  <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 shadow-sm btn-lg"
+                    :disabled="isLoading">
+                    <span v-if="isLoading">
+                      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Registering...
+                    </span>
+                    <span v-else>
+                      <i class="fa fa-arrow-right me-2"></i>Start My Wellness Journey
+                    </span>
                   </button>
 
-                  <!-- Login Link -->
                   <p class="text-center mt-4 mb-0 text-muted">
                     Already have an account?
-                    <router-link to="/" class="text-primary fw-bold text-decoration-none">Login here</router-link>
+                    <router-link to="/login" class="text-primary fw-bold text-decoration-none">Login here</router-link>
                   </p>
                 </form>
               </div>
@@ -216,12 +258,14 @@ onMounted(() => {
 }
 
 /* Form styling */
-.form-control {
+.form-control,
+.form-select {
   border: 2px solid #e0e0e0;
   transition: all 0.3s ease;
 }
 
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
   border-color: var(--bs-primary);
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
 }
@@ -235,9 +279,14 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+.btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* Alert styling */

@@ -1,15 +1,17 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router'; // Import Router
-import * as wowModule from "wowjs";
-import "wowjs/css/libs/animate.css";
+import { useRouter } from 'vue-router';
 
-const router = useRouter(); // Initialize Router
+// --- AOS Imports ---
+import AOS from "aos";
+import "aos/dist/aos.css";
+
+const router = useRouter();
 const questions = ref([]);
 const answers = ref({});
 const isLoading = ref(false);
 
-// Helper to split emojis from text (e.g., "😴 Sleep" -> {icon: "😴", text: "Sleep"})
+// Helper to split emojis from text
 const splitEmoji = (str) => {
     if (!str) return { icon: null, text: '' };
     const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
@@ -39,8 +41,15 @@ const isSelected = (qId, optId) => {
     return Array.isArray(val) ? val.includes(optId) : val === optId;
 };
 
-// Load Questions
+// --- Single OnMounted Hook ---
 onMounted(async () => {
+    // 1. Initialize Animation
+    AOS.init({
+        duration: 800,
+        once: true
+    });
+
+    // 2. Load Questions
     try {
         const res = await fetch('/api/questionnaire');
         questions.value = await res.json();
@@ -52,7 +61,6 @@ onMounted(async () => {
             else answers.value[q.id] = null;
         });
 
-        new wowModule.WOW().init();
     } catch (e) {
         console.error("Error loading questions", e);
     }
@@ -65,13 +73,11 @@ const submit = async () => {
         const token = localStorage.getItem('token');
         if (!token) return alert("You must be logged in to submit.");
 
-        // Extract Option IDs for the backend to calculate score
         let selectedOptionIds = [];
         for (const [qId, ans] of Object.entries(answers.value)) {
             if (Array.isArray(ans)) {
                 selectedOptionIds.push(...ans);
             } else if (typeof ans === 'number' && ans > 10) {
-                // Ensure we capture radio/slider values that are Option IDs
                 selectedOptionIds.push(ans);
             }
         }
@@ -91,7 +97,6 @@ const submit = async () => {
         const result = await response.json();
 
         if (response.ok) {
-            // SUCCESS: Redirect to the Report Page
             router.push('/report');
         } else {
             alert('Error: ' + result.message);
@@ -108,9 +113,10 @@ const submit = async () => {
 
 <template>
     <div class="container py-5">
-        <h1 class="text-center mb-5 wow fadeInUp">Wellness Assessment</h1>
+        <h1 class="text-center mb-5" data-aos="fade-up">Wellness Assessment</h1>
 
-        <div v-for="(q, i) in questions" :key="q.id" class="card mb-4 shadow-sm border-0 wow fadeInUp">
+        <div v-for="(q, i) in questions" :key="q.id" class="card mb-4 shadow-sm border-0" data-aos="fade-up"
+            :data-aos-delay="i * 100">
             <div class="card-body p-4">
                 <h4 class="fw-bold text-primary mb-3">{{ i + 1 }}. {{ q.text }}</h4>
 
@@ -194,9 +200,6 @@ const submit = async () => {
         </div>
     </div>
 </template>
-
-
-
 
 <style scoped>
 .goal-card {
@@ -346,6 +349,77 @@ const submit = async () => {
     .energy-bar {
         width: 30px !important;
         height: 60px !important;
+    }
+}
+
+.goal-card {
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.goal-card:hover {
+    transform: translateY(-5px);
+    border-color: #667eea;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+}
+
+.goal-card.active {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.sleep-option {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+
+.sleep-option:hover,
+.sleep-option .emoji-wrapper.active {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.emoji-wrapper {
+    transition: all 0.3s ease;
+    padding: 10px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+}
+
+.emoji-wrapper.active {
+    border-color: #667eea;
+    background-color: rgba(102, 126, 234, 0.15);
+}
+
+.habit-item {
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.habit-item:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+    border-color: #667eea;
+}
+
+.habit-item.active {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea !important;
+}
+
+.form-range::-webkit-slider-thumb {
+    background: #667eea;
+}
+
+.energy-bar {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+@media (max-width: 576px) {
+    .goal-card {
+        padding: 1rem !important;
     }
 }
 </style>
