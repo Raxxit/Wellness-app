@@ -122,7 +122,7 @@ onMounted(() => {
       <div class="container" data-aos="fade-up">
         <h2 class="fw-bold mb-3">Ready to prioritize your mental health?</h2>
         <p class="text-muted mb-4">Take the first step towards a happier, healthier you today.</p>
-        <button class="btn btn-outline-primary btn-lg rounded-pill px-5">Get Started Free</button>
+        <router-link to="/register" class="btn btn-outline-primary btn-lg rounded-pill px-5">Get Started Free</router-link>
       </div>
     </section>
 
