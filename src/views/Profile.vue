@@ -23,7 +23,7 @@ const formData = reactive({
 });
 
 const isSaving = ref(false);
-const isLoading = ref(true); // Starts true, needs fetchUserProfile to turn false
+const isLoading = ref(true);
 const successMessage = ref("");
 const errorMessage = ref("");
 const showPassword = ref(false);
@@ -57,8 +57,7 @@ const fetchUserProfile = async () => {
       return;
     }
 
-    // Fixed: Added full URL http://127.0.0.1:5000 to ensure it hits Flask
-    const response = await fetch('http://127.0.0.1:5000/api/profile', {
+    const response = await fetch('/api/profile', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -87,7 +86,6 @@ const fetchUserProfile = async () => {
     console.error("Profile fetch error:", error);
     errorMessage.value = "Cannot connect to server. Is Flask running?";
   } finally {
-    // CRITICAL: This turns off the spinner
     isLoading.value = false;
   }
 };
