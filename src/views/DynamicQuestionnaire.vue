@@ -1,17 +1,15 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-
-// --- AOS Imports ---
 import AOS from "aos";
 import "aos/dist/aos.css";
 
 const router = useRouter();
 const questions = ref([]);
 const answers = ref({});
+const errors = ref({}); // Store error messages per question
 const isLoading = ref(false);
 
-// Helper to split emojis from text
 const splitEmoji = (str) => {
     if (!str) return { icon: null, text: '' };
     const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
@@ -22,8 +20,10 @@ const splitEmoji = (str) => {
     return { icon: null, text: str };
 };
 
-// Handle selection logic
 const toggle = (qId, optId, isMulti) => {
+    // Clear error when user interacts
+    if (errors.value[qId]) delete errors.value[qId];
+
     if (!answers.value[qId]) answers.value[qId] = isMulti ? [] : null;
 
     if (isMulti) {
@@ -41,24 +41,69 @@ const isSelected = (qId, optId) => {
     return Array.isArray(val) ? val.includes(optId) : val === optId;
 };
 
-// --- Single OnMounted Hook ---
-onMounted(async () => {
-    // 1. Initialize Animation
-    AOS.init({
-        duration: 800,
-        once: true
+// --- VALIDATION LOGIC ---
+const validateForm = () => {
+    errors.value = {}; // Reset errors
+    let isValid = true;
+
+    questions.value.forEach(q => {
+        const ans = answers.value[q.id];
+        const type = String(q.type);
+
+        // Type 0 & 3: Multi-select (Must pick at least one)
+        if (['0', '3'].includes(type)) {
+            if (!ans || !Array.isArray(ans) || ans.length === 0) {
+                errors.value[q.id] = "Please select at least one option.";
+                isValid = false;
+            }
+        }
+        // Type 1 & 5: Single Select / Radio (Must pick one)
+        else if (['1', '5'].includes(type)) {
+            if (ans === null || ans === undefined) {
+                errors.value[q.id] = "Please select an option.";
+                isValid = false;
+            }
+        }
+        // Type 4: Complex Matrix (Must answer all sub-questions)
+        else if (type === '4') {
+            // Check if ans is an object and has keys for all options
+            if (!ans || Object.keys(ans).length < q.options.length) {
+                errors.value[q.id] = "Please rate all items.";
+                isValid = false;
+            }
+        }
+        // Type 6: Textarea (Must not be empty)
+        else if (type === '6') {
+            if (!ans || typeof ans !== 'string' || ans.trim() === '') {
+                errors.value[q.id] = "Please write a short answer.";
+                isValid = false;
+            }
+        }
+        // Type 2: Slider (Always has a default value, so usually valid)
     });
 
-    // 2. Load Questions
+    return isValid;
+};
+
+onMounted(async () => {
+    AOS.init({ duration: 800, once: true });
+
     try {
         const res = await fetch('/api/questionnaire');
         questions.value = await res.json();
 
-        // Initialize default answer structures
+        // Initialize answers structure correctly
         questions.value.forEach(q => {
-            if (['0', '3', '4'].includes(String(q.type))) answers.value[q.id] = [];
-            else if (String(q.type) === '2') answers.value[q.id] = 5; // Default slider value
-            else answers.value[q.id] = null;
+            const type = String(q.type);
+            if (['0', '3'].includes(type)) {
+                answers.value[q.id] = [];
+            } else if (type === '2') {
+                answers.value[q.id] = 5;
+            } else if (type === '4') {
+                answers.value[q.id] = {}; // Initialize object for matrix
+            } else {
+                answers.value[q.id] = null;
+            }
         });
 
     } catch (e) {
@@ -66,18 +111,26 @@ onMounted(async () => {
     }
 });
 
-// Submit Logic
 const submit = async () => {
+    // 1. Run Validation
+    if (!validateForm()) {
+        // Optional: Scroll to top or first error
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+
     isLoading.value = true;
     try {
         const token = localStorage.getItem('token');
         if (!token) return alert("You must be logged in to submit.");
 
+        // Flatten answers for simple ID storage if needed by backend
         let selectedOptionIds = [];
         for (const [qId, ans] of Object.entries(answers.value)) {
             if (Array.isArray(ans)) {
                 selectedOptionIds.push(...ans);
             } else if (typeof ans === 'number' && ans > 10) {
+                // Assuming IDs > 10 logic from your snippet
                 selectedOptionIds.push(ans);
             }
         }
@@ -89,8 +142,8 @@ const submit = async () => {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                selected_options: selectedOptionIds,
-                raw_answers: answers.value
+                selected_options: selectedOptionIds, // Legacy support
+                raw_answers: answers.value // Full data
             })
         });
 
@@ -115,88 +168,103 @@ const submit = async () => {
     <div class="container py-5">
         <h1 class="text-center mb-5" data-aos="fade-up">Wellness Assessment</h1>
 
-        <div v-for="(q, i) in questions" :key="q.id" class="card mb-4 shadow-sm border-0" data-aos="fade-up"
-            :data-aos-delay="i * 100">
-            <div class="card-body p-4">
-                <h4 class="fw-bold text-primary mb-3">{{ i + 1 }}. {{ q.text }}</h4>
+        <div v-for="(q, i) in questions" :key="q.id" class="mb-4" data-aos="fade-up" :data-aos-delay="i * 100">
 
-                <div v-if="q.type == 0" class="row g-3">
-                    <div v-for="opt in q.options" :key="opt.id" class="col-6 col-md-4">
-                        <div class="goal-card text-center p-3 rounded border hover-effect"
-                            :class="{ 'active': isSelected(q.id, opt.id) }" @click="toggle(q.id, opt.id, true)">
-                            <div class="display-4 mb-2" v-if="splitEmoji(opt.text).icon">
-                                {{ splitEmoji(opt.text).icon }}
+            <div class="card shadow-sm" :class="{ 'border-danger': errors[q.id], 'border-0': !errors[q.id] }">
+
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-3" :class="errors[q.id] ? 'text-danger' : 'text-primary'">
+                        {{ i + 1 }}. {{ q.text }}
+                    </h4>
+
+                    <div v-if="q.type == 0" class="row g-3">
+                        <div v-for="opt in q.options" :key="opt.id" class="col-6 col-md-4">
+                            <div class="goal-card text-center p-3 rounded border hover-effect"
+                                :class="{ 'active': isSelected(q.id, opt.id) }" @click="toggle(q.id, opt.id, true)">
+                                <div class="display-4 mb-2" v-if="splitEmoji(opt.text).icon">
+                                    {{ splitEmoji(opt.text).icon }}
+                                </div>
+                                <p class="mb-0 fw-medium">{{ splitEmoji(opt.text).text }}</p>
                             </div>
-                            <p class="mb-0 fw-medium">{{ splitEmoji(opt.text).text }}</p>
                         </div>
                     </div>
-                </div>
 
-                <div v-if="q.type == 1" class="d-flex justify-content-between align-items-center mt-3">
-                    <div v-for="opt in q.options" :key="opt.id" class="sleep-option text-center"
-                        @click="toggle(q.id, opt.id, false)">
-                        <div class="emoji-wrapper mb-2 mx-auto" :class="{ 'active': isSelected(q.id, opt.id) }">
-                            <span class="display-4">{{ splitEmoji(opt.text).icon || '❓' }}</span>
-                        </div>
-                        <p class="small mb-0">{{ splitEmoji(opt.text).text }}</p>
-                    </div>
-                </div>
-
-                <div v-if="q.type == 2" class="mt-4">
-                    <div class="d-flex justify-content-between text-muted mb-2">
-                        <span>{{ q.options[0]?.text || 'Low' }}</span>
-                        <span>{{ q.options[1]?.text || 'High' }}</span>
-                    </div>
-                    <input type="range" class="form-range" min="1" max="10" v-model="answers[q.id]">
-                    <div class="text-center fw-bold text-primary">{{ answers[q.id] }}</div>
-                </div>
-
-                <div v-if="q.type == 3" class="row g-2">
-                    <div v-for="opt in q.options" :key="opt.id" class="col-6 col-md-4">
-                        <div class="habit-item p-3 border rounded d-flex align-items-center mb-2"
-                            :class="{ 'active': isSelected(q.id, opt.id) }" @click="toggle(q.id, opt.id, true)">
-                            <input class="form-check-input me-2" type="checkbox" :checked="isSelected(q.id, opt.id)">
-                            <label class="mb-0">{{ opt.text }}</label>
+                    <div v-if="q.type == 1" class="d-flex justify-content-between align-items-center mt-3">
+                        <div v-for="opt in q.options" :key="opt.id" class="sleep-option text-center"
+                            @click="toggle(q.id, opt.id, false)">
+                            <div class="emoji-wrapper mb-2 mx-auto" :class="{ 'active': isSelected(q.id, opt.id) }">
+                                <span class="display-4">{{ splitEmoji(opt.text).icon || '❓' }}</span>
+                            </div>
+                            <p class="small mb-0">{{ splitEmoji(opt.text).text }}</p>
                         </div>
                     </div>
-                </div>
 
-                <div v-if="q.type == 4" class="row text-center mt-3">
-                    <div v-for="opt in q.options" :key="opt.id" class="col">
-                        <p class="small text-muted mb-1">{{ opt.text }}</p>
-                        <div class="energy-bar mx-auto mb-2 bg-light rounded" style="height: 60px; width: 30px;">
+                    <div v-if="q.type == 2" class="mt-4">
+                        <div class="d-flex justify-content-between text-muted mb-2">
+                            <span>{{ q.options[0]?.text || 'Low' }}</span>
+                            <span>{{ q.options[1]?.text || 'High' }}</span>
                         </div>
-                        <select class="form-select form-select-sm" @change="(e) => {
-                            if (!answers[q.id] || Array.isArray(answers[q.id])) answers[q.id] = {};
-                            answers[q.id][opt.text] = e.target.value;
-                        }">
-                            <option value="low">Low</option>
-                            <option value="medium">Med</option>
-                            <option value="high">High</option>
-                        </select>
+                        <input type="range" class="form-range" min="1" max="10" v-model="answers[q.id]">
+                        <div class="text-center fw-bold text-primary">{{ answers[q.id] }}</div>
                     </div>
-                </div>
 
-                <div v-if="q.type == 5" class="d-flex flex-column gap-2">
-                    <div v-for="opt in q.options" :key="opt.id" class="form-check">
-                        <input class="form-check-input" type="radio" :name="'q' + q.id" :value="opt.id"
-                            v-model="answers[q.id]">
-                        <label class="form-check-label">{{ opt.text }}</label>
+                    <div v-if="q.type == 3" class="row g-2">
+                        <div v-for="opt in q.options" :key="opt.id" class="col-6 col-md-4">
+                            <div class="habit-item p-3 border rounded d-flex align-items-center mb-2"
+                                :class="{ 'active': isSelected(q.id, opt.id) }" @click="toggle(q.id, opt.id, true)">
+                                <input class="form-check-input me-2" type="checkbox"
+                                    :checked="isSelected(q.id, opt.id)">
+                                <label class="mb-0">{{ opt.text }}</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div v-if="q.type == 6">
-                    <textarea class="form-control" rows="3" v-model="answers[q.id]"></textarea>
-                </div>
+                    <div v-if="q.type == 4" class="row text-center mt-3">
+                        <div v-for="opt in q.options" :key="opt.id" class="col">
+                            <p class="small text-muted mb-1">{{ opt.text }}</p>
+                            <div class="energy-bar mx-auto mb-2 bg-light rounded" style="height: 60px; width: 30px;">
+                            </div>
+                            <select class="form-select form-select-sm" @change="(e) => {
+                                if (errors[q.id]) delete errors[q.id];
+                                if (!answers[q.id]) answers[q.id] = {};
+                                answers[q.id][opt.text] = e.target.value;
+                            }">
+                                <option value="" disabled selected>-</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Med</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
 
+                    <div v-if="q.type == 5" class="d-flex flex-column gap-2">
+                        <div v-for="opt in q.options" :key="opt.id" class="form-check">
+                            <input class="form-check-input" type="radio" :name="'q' + q.id" :value="opt.id"
+                                v-model="answers[q.id]" @change="delete errors[q.id]">
+                            <label class="form-check-label">{{ opt.text }}</label>
+                        </div>
+                    </div>
+
+                    <div v-if="q.type == 6">
+                        <textarea class="form-control" rows="3" v-model="answers[q.id]"
+                            @input="delete errors[q.id]"></textarea>
+                    </div>
+
+                    <div v-if="errors[q.id]" class="mt-3 text-danger fw-bold small animate__animated animate__shakeX">
+                        <i class="fa fa-exclamation-circle me-1"></i> {{ errors[q.id] }}
+                    </div>
+
+                </div>
             </div>
         </div>
-
         <div class="text-center mt-5">
             <button @click="submit" :disabled="isLoading" class="btn btn-primary btn-lg rounded-pill px-5">
                 <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
                 {{ isLoading ? 'Processing...' : 'Submit Assessment' }}
             </button>
+            <p v-if="Object.keys(errors).length > 0" class="text-danger mt-3">
+                Please answer all questions marked in red above.
+            </p>
         </div>
     </div>
 </template>
@@ -421,5 +489,9 @@ const submit = async () => {
     .goal-card {
         padding: 1rem !important;
     }
+}
+
+.border-danger {
+    border: 2px solid #dc3545 !important;
 }
 </style>

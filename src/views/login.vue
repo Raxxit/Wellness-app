@@ -5,7 +5,7 @@ import axios from 'axios'
 
 const router = useRouter()
 const loading = ref(false)
-const errorMessage = ref('')
+const globalErrorMessage = ref('') // Renamed to avoid confusion with field errors
 
 const showPassword = ref(false)
 const rememberMe = ref(false)
@@ -14,6 +14,40 @@ const form = reactive({
   email: '',
   password: ''
 })
+
+// --- 1. NEW: Error State ---
+const errors = reactive({
+  email: '',
+  password: ''
+})
+
+// --- 2. NEW: Validation Logic ---
+const isValidEmail = (email) => {
+  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+};
+
+const validateField = (field) => {
+  const val = form[field];
+
+  if (field === 'email') {
+    if (!val) {
+      errors.email = "Email is required.";
+    } else if (!isValidEmail(val)) {
+      errors.email = "Please enter a valid email address.";
+    } else {
+      errors.email = "";
+    }
+  }
+
+  if (field === 'password') {
+    if (!val) {
+      errors.password = "Password is required.";
+    } else {
+      errors.password = "";
+    }
+  }
+}
 
 onMounted(() => {
   const savedEmail = localStorage.getItem('rememberedEmail')
@@ -24,7 +58,16 @@ onMounted(() => {
 })
 
 const handleLogin = async () => {
-  errorMessage.value = ''
+  globalErrorMessage.value = ''
+
+  // --- 3. NEW: Check Validation Before API Call ---
+  validateField('email');
+  validateField('password');
+
+  if (errors.email || errors.password) {
+    return; // Stop if there are local errors
+  }
+
   loading.value = true
 
   try {
@@ -43,15 +86,13 @@ const handleLogin = async () => {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
 
-      // ▼▼▼ CHANGE THIS LINE ▼▼▼
       router.push('/dashboard')
-      // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     }
   } catch (error) {
     if (error.response?.data?.message) {
-      errorMessage.value = error.response.data.message
+      globalErrorMessage.value = error.response.data.message
     } else {
-      errorMessage.value = 'Login failed. Please try again.'
+      globalErrorMessage.value = 'Login failed. Please try again.'
     }
   } finally {
     loading.value = false
@@ -59,11 +100,9 @@ const handleLogin = async () => {
 }
 </script>
 
-
 <template>
   <div class="login-wrapper">
     <div class="login-card">
-      <!-- Left side - Wellness Illustration -->
       <div class="login-illustration">
         <div class="wellness-icon">
           <div class="leaf">🍃</div>
@@ -74,15 +113,14 @@ const handleLogin = async () => {
         <p class="wellness-quote">"Take care of your body. It's the only place you have to live."</p>
       </div>
 
-      <!-- Right side - Login Form -->
       <div class="login-form-section">
         <div class="form-header">
           <h2>Sign In</h2>
           <p class="form-subtitle">Access your wellness journey</p>
         </div>
 
-        <form @submit.prevent="handleLogin" class="login-form">
-          <!-- Email Input -->
+        <form @submit.prevent="handleLogin" class="login-form" novalidate>
+
           <div class="input-group">
             <div class="input-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -91,11 +129,12 @@ const handleLogin = async () => {
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
             </div>
-            <input type="email" v-model="form.email" placeholder="" required :disabled="loading" class="form-input" />
+            <input type="email" v-model="form.email" placeholder="" required :disabled="loading" class="form-input"
+              :class="{ 'has-error': errors.email }" @blur="validateField('email')" @input="errors.email = ''" />
             <label>Email Address</label>
+            <span v-if="errors.email" class="input-error-msg">{{ errors.email }}</span>
           </div>
 
-          <!-- Password Input -->
           <div class="input-group">
             <div class="input-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -105,8 +144,10 @@ const handleLogin = async () => {
               </svg>
             </div>
             <input :type="showPassword ? 'text' : 'password'" v-model="form.password" placeholder="" required
-              :disabled="loading" class="form-input" />
+              :disabled="loading" class="form-input" :class="{ 'has-error': errors.password }"
+              @blur="validateField('password')" @input="errors.password = ''" />
             <label>Password</label>
+
             <button type="button" @click="showPassword = !showPassword" class="password-toggle" :disabled="loading">
               <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -121,9 +162,10 @@ const handleLogin = async () => {
                 <line x1="1" y1="1" x2="23" y2="23"></line>
               </svg>
             </button>
+
+            <span v-if="errors.password" class="input-error-msg">{{ errors.password }}</span>
           </div>
 
-          <!-- Remember Me & Forgot Password -->
           <div class="form-options">
             <label class="checkbox-container">
               <input type="checkbox" v-model="rememberMe">
@@ -133,7 +175,6 @@ const handleLogin = async () => {
             <a href="#" class="forgot-password">Forgot password?</a>
           </div>
 
-          <!-- Submit Button -->
           <button type="submit" :disabled="loading" class="submit-button" :class="{ loading: loading }">
             <span v-if="!loading">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -148,38 +189,32 @@ const handleLogin = async () => {
             </span>
           </button>
 
-          <!-- Divider -->
           <div class="divider">
             <span>or continue with</span>
           </div>
 
-
-
-          <!-- Sign Up Link -->
           <p class="signup-link">
             New to Wellness?
-            <a href="#" class="signup-text">Create an account</a>
+            <router-link to="/register" class="signup-text">Create an account</router-link>
           </p>
         </form>
 
-        <!-- Error Message -->
-        <div v-if="errorMessage" class="error-message">
+        <div v-if="globalErrorMessage" class="error-message">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
-          {{ errorMessage }}
+          {{ globalErrorMessage }}
         </div>
       </div>
     </div>
   </div>
 </template>
 
-
-
 <style scoped>
+/* Keeping all your existing styles... */
 .login-wrapper {
   min-height: 100vh;
   display: flex;
@@ -199,7 +234,6 @@ const handleLogin = async () => {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
-/* Left Illustration Side */
 .login-illustration {
   flex: 1;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -271,7 +305,6 @@ const handleLogin = async () => {
   line-height: 1.6;
 }
 
-/* Right Form Side */
 .login-form-section {
   flex: 1;
   padding: 50px;
@@ -295,7 +328,6 @@ const handleLogin = async () => {
   font-size: 15px;
 }
 
-/* Form Inputs */
 .input-group {
   position: relative;
   margin-bottom: 25px;
@@ -374,7 +406,6 @@ const handleLogin = async () => {
   cursor: not-allowed;
 }
 
-/* Form Options */
 .form-options {
   display: flex;
   justify-content: space-between;
@@ -456,7 +487,6 @@ const handleLogin = async () => {
   text-decoration: underline;
 }
 
-/* Submit Button */
 .submit-button {
   width: 100%;
   padding: 16px;
@@ -513,7 +543,6 @@ const handleLogin = async () => {
   gap: 10px;
 }
 
-/* Divider */
 .divider {
   display: flex;
   align-items: center;
@@ -534,7 +563,6 @@ const handleLogin = async () => {
   padding: 0 15px;
 }
 
-/* Social Login */
 .social-login {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -567,7 +595,6 @@ const handleLogin = async () => {
   border-color: #000000;
 }
 
-/* Sign Up Link */
 .signup-link {
   text-align: center;
   color: #718096;
@@ -585,7 +612,6 @@ const handleLogin = async () => {
   text-decoration: underline;
 }
 
-/* Error Message */
 .error-message {
   margin-top: 20px;
   padding: 14px;
@@ -612,7 +638,6 @@ const handleLogin = async () => {
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .login-card {
     flex-direction: column;
@@ -629,6 +654,38 @@ const handleLogin = async () => {
 
   .social-login {
     grid-template-columns: 1fr;
+  }
+}
+
+/* --- NEW CSS FOR VALIDATION --- */
+.form-input.has-error {
+  border-color: #e53e3e;
+  background-color: #fff5f5;
+}
+
+.form-input.has-error:focus {
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+
+.input-error-msg {
+  display: block;
+  font-size: 12px;
+  color: #e53e3e;
+  margin-top: 4px;
+  margin-left: 16px;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

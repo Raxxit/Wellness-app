@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
+import re, logging
 import datetime
 from .extensions import db
 from .models import User, Question, QuestionOption, WellnessResult, DiagnosisLogic
@@ -83,7 +84,6 @@ def update_profile():
                 "message": "Invalid token"
             }), 401
         
-        # Get user from database
         user = User.query.get(user_id)
         if not user:
             return jsonify({
@@ -91,26 +91,20 @@ def update_profile():
                 "message": "User not found"
             }), 404
         
-        # Get update data
         data = request.get_json()
         
-        # Update user fields
         if 'username' in data and data['username']:
             user.username = data['username']
         
         if 'age' in data:
-            # Allow age to be null
             user.age = data['age'] if data['age'] else None
         
         if 'gender' in data:
-            # Allow gender to be null
             user.gender = data['gender'] if data['gender'] else None
         
         if 'password' in data and data['password']:
-            # Update password if provided
             user.password_hash = generate_password_hash(data['password'])
         
-        # Save changes to database
         db.session.commit()
         
         return jsonify({
@@ -181,7 +175,8 @@ def get_profile():
             "message": f"Profile error: {str(e)}"
         }), 500
 
-# LOGOUT ROUTE (optional)
+
+
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
     return jsonify({
@@ -206,51 +201,73 @@ def register():
     if not request.form:
         return jsonify({"success": False, "message": "No form data received"}), 400
 
-    # 2. Extract Data using request.form
-    username = request.form.get('username')
-    email = request.form.get('email')
-    password = request.form.get('password')
+    # 2. Extract Data
+    username = request.form.get('username', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    password = request.form.get('password', '')
     
-    # 3. Convert types (FormData sends strings, we need Integers)
-    age = request.form.get('age', type=int) 
-    gender = request.form.get('gender', type=int)
+    # Safely convert numbers
+    try:
+        age = int(request.form.get('age'))
+        gender = int(request.form.get('gender'))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "Invalid age or gender format"}), 400
 
-    # 4. Logic Validation
-    if not username or not email or not password:
-        return jsonify({"success": False, "message": "Missing required fields"}), 400
 
+    email_regex = r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+    if not re.match(email_regex, email):
+        return jsonify({"success": False, "message": "Invalid email format"}), 400
+
+    # Length Checks
+    if len(username) < 2:
+        return jsonify({"success": False, "message": "Username must be at least 2 characters"}), 400
+    
+    if len(password) < 6:
+        return jsonify({"success": False, "message": "Password must be at least 6 characters"}), 400
+
+    # Logic Checks
+    if not (13 <= age <= 120):
+        return jsonify({"success": False, "message": "Age must be between 13 and 120"}), 400
+    
+    if gender not in [0, 1, 2, 3]: # 0,1,2,3 correspond to your frontend options
+        return jsonify({"success": False, "message": "Invalid gender selection"}), 400
+
+    # 4. Check for duplicates
     if User.query.filter_by(email=email).first():
-        return jsonify({"success": False, "message": "Email already exists"}), 409
+        return jsonify({
+            "success": False, 
+            "message": "Email already exists",
+            "field": "email" # Helps frontend highlight the specific box
+        }), 409
 
+    # 5. Create User
     hashed_pw = generate_password_hash(password)
 
     new_user = User(
         username=username,
         email=email,
-        age=age, # This is now safely an int or None
-        gender=gender, # This is now safely an int or None
+        age=age, 
+        gender=gender, 
         password_hash=hashed_pw
     )
 
     try:
         db.session.add(new_user)
         db.session.commit()
-        
-        # We still return JSON so the Frontend knows if it worked or not
         return jsonify({
             "success": True, 
             "message": "User registered successfully"
         }), 200
-        
+            
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        logging.error(f"Registration Error: {e}") # Log the real error for you
+        return jsonify({
+            "success": False, 
+            "message": "An internal error occurred. Please try again later." 
+        }), 500
+# 1. ADMIN: Add a new Question
 
-
-
-
-
-    # 1. ADMIN: Add a new Question
 @auth_bp.route('/add-question', methods=['POST'])
 def add_question():
     data = request.json
