@@ -1,38 +1,14 @@
-# .
+# [MindSync] - Mental Health Wellness Platform
 
-This template should help get you started developing with Vue 3 in Vite.
+## 📖 Overview
+This project is a comprehensive wellness application designed to help users assess their mental state and receive personalized actionable reports. The system focuses on the "early awareness" of mental health needs.
 
-## Recommended IDE Setup
+## 🚀 Key Features
+- **Interactive Assessment:** Dynamic questionnaire with real-time progress tracking.
+- **Smart Scoring:** Automated diagnosis logic that maps user answers to wellness categories.
+- **Personalized Reports:** Users receive a custom dashboard with specific habit recommendations.
+- **Curated Resources:** Access to verified professional support links.
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+## 🏗 Architecture
+### Use Case Overview (AI generated Image, i can't draw)
+<img width="1309" height="736" alt="image" src="https://github.com/user-attachments/assets/47d43127-a7bd-44e4-9591-2058a405026e" />
