@@ -81,6 +81,7 @@ onMounted(async () => {
 });
 </script>
 
+
 <template>
     <div class="report-page py-5">
         <div class="container">
@@ -115,9 +116,14 @@ onMounted(async () => {
                             </h6>
                             <div class="display-1 fw-bold mb-2">{{ latestResult.score }}</div>
                             <h2 class="fw-bold mb-3">{{ latestResult.diagnosis || 'Assessment Complete' }}</h2>
-                            <p class="opacity-75 mx-auto" style="max-width: 600px;">
-                                This is your current wellness snapshot based on your latest answers.
-                            </p>
+
+                            <div class="mx-auto p-3 rounded bg-white bg-opacity-10 backdrop-blur"
+                                style="max-width: 700px;">
+                                <i class="fa fa-quote-left opacity-50 mb-2 fs-5"></i>
+                                <p class="lead mb-0 fst-italic">
+                                    {{ latestResult.advice }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -135,21 +141,25 @@ onMounted(async () => {
                         <div v-for="(item, index) in history" :key="item.id || index"
                             class="list-group-item list-group-item-action p-4 d-flex align-items-center justify-content-between border-light">
 
-                            <div class="d-flex align-items-center">
-                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-secondary fw-bold"
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-secondary fw-bold flex-shrink-0"
                                     style="width: 50px; height: 50px;">
                                     {{ history.length - index }}
                                 </div>
 
-                                <div>
+                                <div class="pe-3">
                                     <h5 class="mb-1 fw-bold text-dark">{{ item.diagnosis || 'Check-in' }}</h5>
-                                    <small class="text-muted">
+
+                                    <div class="mb-1 text-muted small">
                                         <i class="fa fa-calendar-alt me-1"></i> {{ formatDate(item.date) }}
-                                    </small>
+                                    </div>
+                                    <p class="mb-0 text-secondary small text-truncate" style="max-width: 500px;">
+                                        💡 {{ item.advice }}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div class="text-end">
+                            <div class="text-end ps-3">
                                 <span class="d-block h3 fw-bold mb-0 text-primary">{{ item.score }}</span>
                                 <span class="small text-muted text-uppercase" style="font-size: 0.7rem;">Total
                                     Score</span>
@@ -168,12 +178,10 @@ onMounted(async () => {
     border-radius: 1.5rem !important;
 }
 
-/* Gradient for the main result card */
 .bg-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
 
-/* Overlay effect */
 .bg-circle-overlay {
     position: absolute;
     top: -50%;
@@ -188,7 +196,12 @@ onMounted(async () => {
     letter-spacing: 2px;
 }
 
-/* List Item Styling */
+/* Glassmorphism effect for advice box */
+.backdrop-blur {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
 .list-group-item {
     transition: background-color 0.2s, transform 0.2s;
     border-left: 0;

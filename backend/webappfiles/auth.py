@@ -380,13 +380,11 @@ def wellness_history():
         return jsonify({"message": "Authorization required"}), 401
     
     try:
-
         token = auth_header.split(' ')[1]
         decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
         current_user_id = decoded['user_id']
     except:
         return jsonify({"message": "Invalid token"}), 401
-
 
     results = WellnessResult.query.filter_by(user_id=current_user_id)\
         .order_by(WellnessResult.generated_at.desc())\
@@ -394,16 +392,23 @@ def wellness_history():
     
     history_data = []
     for r in results:
+
+        logic_entry = DiagnosisLogic.query.filter(
+            DiagnosisLogic.min_score <= r.total_score,
+            DiagnosisLogic.max_score >= r.total_score
+        ).first()
+
+        advice_text = logic_entry.advice_text if logic_entry else "No specific advice available for this score."
+
         history_data.append({
             "id": r.result_id,
             "score": r.total_score,
-            "diagnosis": r.diagnosis_snapshot, # e.g., "High Wellness"
-            # Format datetime to string (YYYY-MM-DD)
+            "diagnosis": r.diagnosis_snapshot, 
+            "advice": advice_text,
             "date": r.generated_at.strftime("%Y-%m-%d") if r.generated_at else "N/A"
         })
         
     return jsonify(history_data), 200
-
 
 @auth_bp.route('/dashboard-stats', methods=['GET'])
 def dashboard_stats():
