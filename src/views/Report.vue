@@ -131,7 +131,7 @@ onMounted(async () => {
                 <div v-else class="text-center py-5 text-muted" data-aos="fade-up">
                     <h4>No Assessments Yet</h4>
                     <p>Complete your first questionnaire to see your results here.</p>
-                    <button @click="router.push('/questionnaire')" class="btn btn-primary mt-3">Start Now</button>
+                    <button @click="router.push('/dynamicques')" class="btn btn-primary mt-3">Start Now</button>
                 </div>
 
                 <div v-if="history.length > 0" data-aos="fade-up" data-aos-delay="200">
