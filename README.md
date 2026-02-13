@@ -2,6 +2,8 @@
 
 ## 📖 Overview
 This project is a comprehensive wellness application designed to help users assess their mental state and receive personalized actionable reports. The system focuses on the "early awareness" of mental health needs.
+Here's the link:
+https://mndsync.netlify.app/
 
 ## 🚀 Key Features
 - **Interactive Assessment:** Dynamic questionnaire with real-time progress tracking.
