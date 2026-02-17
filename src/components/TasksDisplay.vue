@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 
 const props = defineProps({
   userState: {
@@ -39,8 +39,8 @@ const tasksByState = {
   ]
 };
 
-// Emit events for task completion
-const emit = defineEmits(['task-completed', 'task-uncompleted']);
+// Emit events
+const emit = defineEmits(['task-completed', 'task-uncompleted', 'tasks-loaded']);
 
 const tasks = computed(() => tasksByState[props.userState] || tasksByState.healthy);
 
@@ -51,6 +51,11 @@ const handleTaskToggle = (task) => {
     emit('task-uncompleted', task);
   }
 };
+
+// Emit tasks when component is mounted or userState changes
+onMounted(() => {
+  emit('tasks-loaded', tasks.value);
+});
 
 // Helper to get state display name
 const stateDisplayName = computed(() => {
