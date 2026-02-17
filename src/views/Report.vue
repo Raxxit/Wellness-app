@@ -1,20 +1,21 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import AOS from "aos";
 import "aos/dist/aos.css";
 
 const router = useRouter();
+const route = useRoute();
 const history = ref([]);
 const loading = ref(true);
 const userName = ref('User');
 
-// --- Computed Properties ---
+// Computed Properties
 const latestResult = computed(() => {
     return history.value.length > 0 ? history.value[0] : null;
 });
 
-// --- Helper Functions ---
+// Helper Functions
 const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -25,15 +26,20 @@ const formatDate = (dateString) => {
     });
 };
 
-// --- Lifecycle & Data Fetching ---
+// Determine severity based on score
+const determineSeverity = (score) => {
+    if (score > 15) return 'severe';
+    if (score > 8) return 'mild';
+    return 'healthy';
+};
+
+// Lifecycle & Data Fetching
 onMounted(async () => {
-    // 1. Init Animation
     AOS.init({
         duration: 800,
         once: true,
     });
 
-    // 2. Set User Name
     const userStr = localStorage.getItem('user');
     if (userStr) {
         try {
@@ -44,14 +50,12 @@ onMounted(async () => {
         }
     }
 
-    // 3. Check Token
     const token = localStorage.getItem('token');
     if (!token) {
         router.push('/login');
         return;
     }
 
-    // 4. Fetch History
     try {
         const res = await fetch('/api/wellness-history', {
             method: 'GET',
@@ -63,9 +67,52 @@ onMounted(async () => {
 
         if (res.ok) {
             history.value = await res.json();
+            
+            // Store the latest result in localStorage for dashboard
+            if (history.value.length > 0) {
+                const latest = history.value[0];
+                
+                // Get user ID
+                let userId = 'guest';
+                if (userStr) {
+                    const userData = JSON.parse(userStr);
+                    userId = userData.id || userData.userId || Date.now().toString();
+                }
+                
+                const assessmentResult = {
+                    score: latest.score || 0,
+                    severity: determineSeverity(latest.score || 0),
+                    date: latest.date || new Date().toISOString(),
+                    diagnosis: latest.diagnosis || 'Assessment Complete',
+                    advice: latest.advice || 'Keep up the good work!',
+                    userId: userId
+                };
+                
+                // Store in localStorage for dashboard to detect
+                localStorage.setItem('assessmentResult', JSON.stringify(assessmentResult));
+                
+                // Also store in user's assessment history if not already there
+                const historyKey = `assessmentHistory_${userId}`;
+                const localHistory = JSON.parse(localStorage.getItem(historyKey) || '[]');
+                
+                // Check if this assessment is already in local history
+                const exists = localHistory.some(item => 
+                    item.date === assessmentResult.date && item.score === assessmentResult.score
+                );
+                
+                if (!exists) {
+                    localHistory.unshift(assessmentResult);
+                    localStorage.setItem(historyKey, JSON.stringify(localHistory));
+                }
+                
+                // Clear processed flag to ensure dashboard picks it up
+                const lastProcessedKey = `lastProcessedAssessment_${userId}`;
+                localStorage.removeItem(lastProcessedKey);
+                
+                console.log('Assessment result stored in localStorage:', assessmentResult);
+            }
         } else {
             if (res.status === 401) {
-                // Token expired
                 localStorage.removeItem('token');
                 router.push('/login');
             }
@@ -75,12 +122,15 @@ onMounted(async () => {
         console.error("Network error:", e);
     } finally {
         loading.value = false;
-        // Refresh animations after data loads (ensures new DOM elements animate)
         setTimeout(() => { AOS.refresh(); }, 100);
     }
 });
-</script>
 
+// Navigate to new assessment
+const goToNewAssessment = () => {
+    router.push('/dynamicques');
+};
+</script>
 
 <template>
     <div class="report-page py-5">
@@ -91,7 +141,7 @@ onMounted(async () => {
                     <h1 class="fw-bold">{{ userName }}'s Wellness Journey</h1>
                     <p class="text-muted mb-0">Your assessment history and progress.</p>
                 </div>
-                <button @click="router.push('/dynamicques')" class="btn btn-outline-primary rounded-pill px-4">
+                <button @click="goToNewAssessment" class="btn btn-outline-primary rounded-pill px-4">
                     New Check-in
                 </button>
             </div>
@@ -103,7 +153,7 @@ onMounted(async () => {
             </div>
 
             <div v-else>
-
+                <!-- Latest Result Card -->
                 <div v-if="latestResult"
                     class="card border-0 shadow-lg mb-5 bg-primary text-white rounded-4 overflow-hidden"
                     data-aos="fade-up">
@@ -131,9 +181,10 @@ onMounted(async () => {
                 <div v-else class="text-center py-5 text-muted" data-aos="fade-up">
                     <h4>No Assessments Yet</h4>
                     <p>Complete your first questionnaire to see your results here.</p>
-                    <button @click="router.push('/dynamicques')" class="btn btn-primary mt-3">Start Now</button>
+                    <button @click="goToNewAssessment" class="btn btn-primary mt-3">Start Now</button>
                 </div>
 
+                <!-- History Log -->
                 <div v-if="history.length > 0" data-aos="fade-up" data-aos-delay="200">
                     <h4 class="fw-bold mb-4 ps-2 border-start border-4 border-primary">History Log</h4>
 
@@ -196,7 +247,6 @@ onMounted(async () => {
     letter-spacing: 2px;
 }
 
-/* Glassmorphism effect for advice box */
 .backdrop-blur {
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
