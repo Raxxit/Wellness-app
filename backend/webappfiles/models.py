@@ -2,29 +2,29 @@ from .extensions import db
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-
-
 class User(db.Model):
     __tablename__ = 'Users'
-
     id = db.Column('user_id', db.Integer, primary_key=True)
-    
     username = db.Column('user_name', db.Text, nullable=False)
-    
     email = db.Column(db.Text, unique=True, nullable=False)
-    
-    password_hash = db.Column('password_hash', db.Text, nullable=False) 
-    
+    password_hash = db.Column('password_hash', db.Text, nullable=False)
     age = db.Column(db.Integer)
     gender = db.Column(db.Integer)
+    
+    # NEW: Professional fields (all nullable for existing users)
+    user_type = db.Column(db.Integer, default=0)  # 0 = regular user, 1 = professional
+    related_docs = db.Column(db.Text, nullable=True)  # Stores file path to uploaded documents
+    bio = db.Column(db.Text, nullable=True)  # Stores professional bio, experience, clinic info
+    
+    is_verified = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Question(db.Model):
     __tablename__ = 'Questions'
     question_id = db.Column(db.Integer, primary_key=True)
     question_text = db.Column(db.String(255), nullable=False)
-    type = db.Column(db.String(50), nullable=False) 
+    type = db.Column(db.String(50), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
-    
     options = db.relationship('QuestionOption', backref='question', lazy=True)
 
 class QuestionOption(db.Model):
@@ -32,7 +32,7 @@ class QuestionOption(db.Model):
     option_id = db.Column(db.Integer, primary_key=True)
     question_id = db.Column(db.Integer, db.ForeignKey('Questions.question_id'), nullable=False)
     option_text = db.Column(db.String(255), nullable=False)
-    weight = db.Column(db.Integer, default=0) 
+    weight = db.Column(db.Integer, default=0)
 
 class DiagnosisLogic(db.Model):
     __tablename__ = 'DiagnosisLogic'
