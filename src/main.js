@@ -5,7 +5,6 @@ import router from './router'
 // 1. Bootstrap
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import 'bootstrap-icons/font/bootstrap-icons.css'
 
 // 2. Your Custom CSS Assets
 import './assets/css/animate.min.css'      // For the WOW.js animations

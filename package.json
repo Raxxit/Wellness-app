@@ -2,29 +2,18 @@
   "name": "wellness_app",
   "version": "0.0.0",
   "private": true,
-  "description": "This template should help get you started developing with Vue 3 in Vite.",
-  "homepage": "https://github.com/Raxxit/Wellness-app#readme",
-  "bugs": {
-    "url": "https://github.com/Raxxit/Wellness-app/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Raxxit/Wellness-app.git"
-  },
-  "license": "ISC",
-  "author": "",
   "type": "module",
-  "main": "vite.config.js",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "aos": "^2.3.4",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
-    "bootstrap-icons": "^1.13.1",
     "sqlite": "^5.1.1",
     "swiper": "^12.0.3",
     "vue": "^3.5.25",
@@ -36,7 +25,16 @@
     "vite": "^7.3.0",
     "vite-plugin-vue-devtools": "^8.0.5"
   },
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
-  }
+  "description": "This template should help get you started developing with Vue 3 in Vite.",
+  "main": "vite.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raxxit/Wellness-app.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Raxxit/Wellness-app/issues"
+  },
+  "homepage": "https://github.com/Raxxit/Wellness-app#readme"
 }
