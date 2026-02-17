@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import TasksDisplay from '@/components/TasksDisplay.vue'; // Adjust path as needed
 
-// --- AOS Imports (Replaces WOW.js) ---
+// --- AOS Imports ---
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -10,19 +11,19 @@ import "aos/dist/aos.css";
 const userName = ref('User');
 const dbStats = ref({ assessments: 0 });
 const streak = ref(0);
+const userState = ref('healthy'); // Default state
 
-// To-Do List State
+// To-Do List State (simplified - just for tracking)
 const tasks = ref([]);
-const newTaskInput = ref('');
-const newPriority = ref('medium');
+const activitiesCompleted = ref(0);
+const totalPoints = ref(0);
 
 // --- COMPUTED LOGIC ---
-const activitiesCompleted = computed(() => tasks.value.filter(t => t.completed).length);
-const totalPoints = computed(() => activitiesCompleted.value * 50);
 const progressPercent = computed(() => {
     if (tasks.value.length === 0) return 0;
     return Math.round((activitiesCompleted.value / tasks.value.length) * 100);
 });
+
 const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     day: 'numeric',
@@ -30,25 +31,36 @@ const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric'
 });
 
-// --- ACTIONS ---
-const addTask = () => {
-    if (!newTaskInput.value || newTaskInput.value.trim() === '') return;
-
-    tasks.value.unshift({
-        id: Date.now(),
-        title: newTaskInput.value.trim(),
-        priority: newPriority.value,
-        completed: false
-    });
-
-    newTaskInput.value = '';
+// --- TASK HANDLERS ---
+const handleTaskCompleted = (task) => {
+    activitiesCompleted.value++;
+    totalPoints.value += 50;
+    updateTasksList(task, true);
 };
 
-const removeTask = (id) => {
-    tasks.value = tasks.value.filter(t => t.id !== id);
+const handleTaskUncompleted = (task) => {
+    activitiesCompleted.value--;
+    totalPoints.value -= 50;
+    updateTasksList(task, false);
 };
 
-// --- INITIALIZATION (Merged) ---
+const updateTasksList = (updatedTask, completed) => {
+    const index = tasks.value.findIndex(t => t.id === updatedTask.id);
+    if (index !== -1) {
+        tasks.value[index].completed = completed;
+    } else {
+        // If task doesn't exist in our tracking array, add it
+        tasks.value.push(updatedTask);
+    }
+    // Save progress
+    localStorage.setItem('taskProgress', JSON.stringify({
+        completedCount: activitiesCompleted.value,
+        totalPoints: totalPoints.value,
+        completedTaskIds: tasks.value.filter(t => t.completed).map(t => t.id)
+    }));
+};
+
+// --- INITIALIZATION ---
 onMounted(async () => {
     // 1. Initialize AOS
     AOS.init({
@@ -60,15 +72,37 @@ onMounted(async () => {
     const userStr = localStorage.getItem('user');
     if (userStr) userName.value = JSON.parse(userStr).username || 'User';
 
-    // 3. Load Tasks
-    const savedTasks = localStorage.getItem('userTasks');
-    if (savedTasks) tasks.value = JSON.parse(savedTasks);
-    else tasks.value = [
-        { id: 1, title: 'Drink Water', priority: 'high', completed: false },
-        { id: 2, title: 'Read 10 pages', priority: 'low', completed: true },
-    ];
+    // 3. Get User State from assessment results
+    const assessmentResult = localStorage.getItem('assessmentResult');
+    if (assessmentResult) {
+        try {
+            const result = JSON.parse(assessmentResult);
+            // Map your assessment result to state
+            if (result.severity === 'severe' || result.score > 15) {
+                userState.value = 'severe-anxiety';
+            } else if (result.severity === 'mild' || result.score > 8) {
+                userState.value = 'mild-anxiety';
+            } else {
+                userState.value = 'healthy';
+            }
+        } catch (e) {
+            console.error('Error parsing assessment result:', e);
+        }
+    }
 
-    // 4. Fetch DB Stats
+    // 4. Load saved progress
+    const savedProgress = localStorage.getItem('taskProgress');
+    if (savedProgress) {
+        try {
+            const progress = JSON.parse(savedProgress);
+            activitiesCompleted.value = progress.completedCount || 0;
+            totalPoints.value = progress.totalPoints || 0;
+        } catch (e) {
+            console.error('Error loading progress:', e);
+        }
+    }
+
+    // 5. Fetch DB Stats
     const token = localStorage.getItem('token');
     if (token) {
         try {
@@ -83,9 +117,10 @@ onMounted(async () => {
     }
 });
 
-// Save to LocalStorage automatically
+// Watch for changes in user tasks (if we need to save them)
 watch(tasks, (newVal) => {
-    localStorage.setItem('userTasks', JSON.stringify(newVal));
+    // Optional: Save full task states if needed
+    // localStorage.setItem('userTasks', JSON.stringify(newVal));
 }, { deep: true });
 </script>
 
@@ -95,7 +130,7 @@ watch(tasks, (newVal) => {
         <header class="d-flex justify-content-between align-items-end px-4 py-4 bg-white border-bottom shadow-sm mb-3">
             <div>
                 <h6 class="text-uppercase text-muted small fw-bold ls-1 mb-1">
-                    Wellness Journey
+                    Welcome back, {{ userName }}
                 </h6>
                 <h2 class="fw-bold text-dark mb-0">
                     Daily Overview
@@ -111,8 +146,8 @@ watch(tasks, (newVal) => {
         <div class="container-fluid grow p-4 bg-light">
             <div class="row h-100 g-4">
 
+                <!-- Left Column - Stats & Quote -->
                 <div class="col-lg-4 d-flex flex-column gap-4" data-aos="fade-right">
-
                     <div class="row g-3">
                         <div class="col-6">
                             <div class="card border-0 shadow-sm p-3 h-100">
@@ -166,14 +201,14 @@ watch(tasks, (newVal) => {
                     </div>
                 </div>
 
+                <!-- Right Column - Tasks (using new component) -->
                 <div class="col-lg-8" data-aos="fade-left">
                     <div class="card border-0 shadow-sm h-100 d-flex flex-column">
-
                         <div class="card-header bg-white border-bottom py-3 px-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="fw-bold mb-0">My Tasks & Goals</h5>
                                 <span class="badge bg-light text-dark border">
-                                    {{ tasks.length }} Pending
+                                    {{ activitiesCompleted }} / {{ tasks.length }} Completed
                                 </span>
                             </div>
                             <div class="progress mt-3" style="height: 6px;">
@@ -182,59 +217,12 @@ watch(tasks, (newVal) => {
                         </div>
 
                         <div class="card-body p-0 d-flex flex-column overflow-hidden">
-
-                            <div class="p-4 bg-light border-bottom">
-                                <div class="input-group">
-                                    <input type="text" class="form-control border-0 shadow-none"
-                                        placeholder="Add a new task..." v-model="newTaskInput" @keyup.enter="addTask">
-
-                                    <select class="form-select border-0 shadow-none" style="max-width: 100px;"
-                                        v-model="newPriority">
-                                        <option value="high">High</option>
-                                        <option value="medium">Med</option>
-                                        <option value="low">Low</option>
-                                    </select>
-
-                                    <button type="button" class="btn btn-primary px-4" @click="addTask">
-                                        <i class="bi bi-plus-lg"></i> Add
-                                    </button>
-                                </div>
-                            </div>
-
                             <div class="grow overflow-auto p-3 custom-scrollbar">
-                                <div v-if="tasks.length === 0"
-                                    class="h-100 d-flex flex-column align-items-center justify-content-center text-muted opacity-50">
-                                    <i class="bi bi-clipboard2-check fs-1 mb-2"></i>
-                                    <p>No tasks yet. Start your day!</p>
-                                </div>
-
-                                <div v-else class="list-group list-group-flush">
-                                    <div v-for="task in tasks" :key="task.id"
-                                        class="list-group-item border-0 border-bottom py-3 d-flex align-items-center task-row">
-
-                                        <input class="form-check-input fs-5 me-3 rounded-circle" type="checkbox"
-                                            v-model="task.completed" style="cursor: pointer;">
-
-                                        <div class="">
-                                            <div class="fw-bold"
-                                                :class="{ 'text-decoration-line-through text-muted': task.completed }">
-                                                {{ task.title }}
-                                            </div>
-                                            <span class="badge rounded-pill" style="font-size: 0.65rem;" :class="{
-                                                'bg-danger': task.priority === 'high',
-                                                'bg-warning text-dark': task.priority === 'medium',
-                                                'bg-secondary': task.priority === 'low'
-                                            }">
-                                                {{ task.priority.toUpperCase() }}
-                                            </span>
-                                        </div>
-
-                                        <button class="btn btn-link text-danger p-2 opacity-0 delete-btn"
-                                            @click="removeTask(task.id)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                                <TasksDisplay 
+                                    :userState="userState"
+                                    @task-completed="handleTaskCompleted"
+                                    @task-uncompleted="handleTaskUncompleted"
+                                />
                             </div>
                         </div>
                     </div>
@@ -268,23 +256,6 @@ watch(tasks, (newVal) => {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #bbb;
-}
-
-.avatar-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.task-row:hover {
-    background-color: #f8f9fa;
-}
-
-.task-row:hover .delete-btn {
-    opacity: 1 !important;
 }
 
 @media (max-width: 991px) {
