@@ -58,3 +58,45 @@ def get_resources():
         
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+    
+
+
+@admin_bp.route('/resources/<int:id>', methods=['PUT'])
+def update_resource(id):
+    try:
+        resource = Resource.query.get_or_404(id)
+        data = request.json
+        
+        # Update fields
+        resource.title = data.get('title', resource.title)
+        resource.url = data.get('url', resource.url)
+        resource.type = data.get('type', resource.type)
+        resource.is_verified = data.get('is_verified', resource.is_verified)
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Resource updated successfully"
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+
+@admin_bp.route('/resources/<int:id>', methods=['DELETE'])
+def delete_resource(id):
+    try:
+        resource = Resource.query.get_or_404(id)
+        db.session.delete(resource)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Resource deleted successfully"
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
