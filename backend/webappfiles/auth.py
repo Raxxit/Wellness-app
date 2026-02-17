@@ -467,22 +467,18 @@ def delete_question(q_id):
         return jsonify({"success": False, "message": str(e)}), 500
     
 
-    # PROFESSIONAL REGISTRATION ROUTE (WITH FILE UPLOAD)
 @auth_bp.route('/register-professional', methods=['POST'])
 def register_professional():
    
     
-    # 1. Validation
     if not request.form:
         return jsonify({"success": False, "message": "No form data received"}), 400
     
-    # 2. Extract Data
     username = request.form.get('username', '').strip()
     email = request.form.get('email', '').strip().lower()
     password = request.form.get('password', '')
     bio = request.form.get('bio', '').strip()
     
-    # Handle File Upload
     if 'related_docs' not in request.files:
         return jsonify({"success": False, "message": "No document uploaded"}), 400
     
@@ -491,25 +487,21 @@ def register_professional():
     if file.filename == '':
         return jsonify({"success": False, "message": "No selected file"}), 400
     
-    # Validate File Type
     allowed_extensions = {'pdf', 'png', 'jpg', 'jpeg'}
     filename = secure_filename(file.filename)
     if not ('.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions):
         return jsonify({"success": False, "message": "Invalid file type. Only PDF, JPG, PNG allowed"}), 400
     
-    # Safely convert numbers
     try:
         age = int(request.form.get('age'))
         gender = int(request.form.get('gender'))
     except (TypeError, ValueError):
         return jsonify({"success": False, "message": "Invalid number format"}), 400
     
-    # Email validation
     email_regex = r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
     if not re.match(email_regex, email):
         return jsonify({"success": False, "message": "Invalid email format"}), 400
     
-    # Length Checks
     if len(username) < 2:
         return jsonify({"success": False, "message": "Username must be at least 2 characters"}), 400
     if len(password) < 6:
@@ -517,13 +509,11 @@ def register_professional():
     if not bio or len(bio) < 10:
         return jsonify({"success": False, "message": "Professional bio required (min 10 chars)"}), 400
     
-    # Logic Checks
     if not (13 <= age <= 120):
         return jsonify({"success": False, "message": "Age must be between 13 and 120"}), 400
     if gender not in [0, 1, 2, 3]:
         return jsonify({"success": False, "message": "Invalid gender selection"}), 400
     
-    # 3. Check for duplicates
     if User.query.filter_by(email=email).first():
         return jsonify({
             "success": False,
@@ -531,19 +521,16 @@ def register_professional():
             "field": "email"
         }), 409
     
-    # 4. Save File
     upload_folder = os.path.join('uploads', 'professionals')
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
     
-    # Generate unique filename to avoid conflicts
     import uuid
     file_extension = filename.rsplit('.', 1)[1].lower()
     unique_filename = f"{uuid.uuid4().hex}_{secure_filename(username)}_{username}.{file_extension}"
     file_path = os.path.join(upload_folder, unique_filename)
     file.save(file_path)
     
-    # 5. Create Professional User
     hashed_pw = generate_password_hash(password)
     new_user = User(
         username=username,
@@ -551,8 +538,8 @@ def register_professional():
         age=age,
         gender=gender,
         password_hash=hashed_pw,
-        user_type=1,  # 1 = professional
-        related_docs=file_path,  # Store the file path
+        role = "Pro",
+        related_docs=file_path, 
         bio=bio,
         is_verified=False
     )

@@ -8,13 +8,11 @@ class User(db.Model):
     username = db.Column('user_name', db.Text, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
     password_hash = db.Column('password_hash', db.Text, nullable=False)
+    role = db.Column(db.Text, nullable=False, default='User')
     age = db.Column(db.Integer)
     gender = db.Column(db.Integer)
-    
-    # NEW: Professional fields (all nullable for existing users)
-    user_type = db.Column(db.Integer, default=0)  # 0 = regular user, 1 = professional
-    related_docs = db.Column(db.Text, nullable=True)  # Stores file path to uploaded documents
-    bio = db.Column(db.Text, nullable=True)  # Stores professional bio, experience, clinic info
+    related_docs = db.Column(db.Text, nullable=True)
+    bio = db.Column(db.Text, nullable=True)
     
     is_verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
