@@ -4,6 +4,7 @@ import AboutView from '@/views/AboutView.vue'
 import Profile from '@/views/Profile.vue'
 import login from '@/views/login.vue'
 import resources from '@/views/resources.vue'
+import AdminResource from '@/views/AdminResource.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
 import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
 import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
@@ -46,6 +47,11 @@ const router = createRouter({
             path: '/resources',
             name: 'resources',
             component: resources,
+        },
+        {
+            path: '/AdminResource',
+            name: 'AdminResource',
+            component: AdminResource,
         },
         {
             path: '/questions',
