@@ -469,8 +469,6 @@ def delete_question(q_id):
 
 @auth_bp.route('/register-professional', methods=['POST'])
 def register_professional():
-   
-    
     if not request.form:
         return jsonify({"success": False, "message": "No form data received"}), 400
     
@@ -479,58 +477,57 @@ def register_professional():
     password = request.form.get('password', '')
     bio = request.form.get('bio', '').strip()
     
-    if 'related_docs' not in request.files:
-        return jsonify({"success": False, "message": "No document uploaded"}), 400
-    
-    file = request.files['related_docs']
-    
-    if file.filename == '':
-        return jsonify({"success": False, "message": "No selected file"}), 400
-    
-    allowed_extensions = {'pdf', 'png', 'jpg', 'jpeg'}
-    filename = secure_filename(file.filename)
-    if not ('.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions):
-        return jsonify({"success": False, "message": "Invalid file type. Only PDF, JPG, PNG allowed"}), 400
-    
+    if len(username) < 2:
+        return jsonify({"success": False, "message": "Username too short"}), 400
+    if len(password) < 6:
+        return jsonify({"success": False, "message": "Password too short"}), 400
+    if not bio or len(bio) < 10:
+        return jsonify({"success": False, "message": "Bio required (min 10 chars)"}), 400
+
     try:
         age = int(request.form.get('age'))
         gender = int(request.form.get('gender'))
     except (TypeError, ValueError):
-        return jsonify({"success": False, "message": "Invalid number format"}), 400
-    
-    email_regex = r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
-    if not re.match(email_regex, email):
-        return jsonify({"success": False, "message": "Invalid email format"}), 400
-    
-    if len(username) < 2:
-        return jsonify({"success": False, "message": "Username must be at least 2 characters"}), 400
-    if len(password) < 6:
-        return jsonify({"success": False, "message": "Password must be at least 6 characters"}), 400
-    if not bio or len(bio) < 10:
-        return jsonify({"success": False, "message": "Professional bio required (min 10 chars)"}), 400
-    
+        return jsonify({"success": False, "message": "Invalid age or gender"}), 400
+        
     if not (13 <= age <= 120):
-        return jsonify({"success": False, "message": "Age must be between 13 and 120"}), 400
+        return jsonify({"success": False, "message": "Invalid age range"}), 400
     if gender not in [0, 1, 2, 3]:
-        return jsonify({"success": False, "message": "Invalid gender selection"}), 400
-    
+        return jsonify({"success": False, "message": "Invalid gender"}), 400
+
+    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    if not re.match(email_regex, email):
+        return jsonify({"success": False, "message": "Invalid email"}), 400
+
     if User.query.filter_by(email=email).first():
-        return jsonify({
-            "success": False,
-            "message": "Email already exists",
-            "field": "email"
-        }), 409
+        return jsonify({"success": False, "message": "Email taken", "field": "email"}), 409
+
+    if 'related_docs' not in request.files:
+        return jsonify({"success": False, "message": "No document uploaded"}), 400
+    
+    file = request.files['related_docs']
+    if file.filename == '':
+        return jsonify({"success": False, "message": "No selected file"}), 400
+
+    filename = secure_filename(file.filename)
+    allowed_extensions = {'pdf', 'png', 'jpg', 'jpeg'}
+    
+    if '.' not in filename or filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
+         return jsonify({"success": False, "message": "Invalid file type"}), 400
+
+    import uuid
+    file_ext = filename.rsplit('.', 1)[1].lower()
+    
+    safe_username = secure_filename(username)
+    unique_filename = f"{uuid.uuid4().hex}_{safe_username}.{file_ext}"
     
     upload_folder = os.path.join('uploads', 'professionals')
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
-    
-    import uuid
-    file_extension = filename.rsplit('.', 1)[1].lower()
-    unique_filename = f"{uuid.uuid4().hex}_{secure_filename(username)}_{username}.{file_extension}"
+        
     file_path = os.path.join(upload_folder, unique_filename)
     file.save(file_path)
-    
+
     hashed_pw = generate_password_hash(password)
     new_user = User(
         username=username,
@@ -538,8 +535,8 @@ def register_professional():
         age=age,
         gender=gender,
         password_hash=hashed_pw,
-        role = "Pro",
-        related_docs=file_path, 
+        role="Advisor",
+        related_docs=unique_filename,
         bio=bio,
         is_verified=False
     )
@@ -547,14 +544,10 @@ def register_professional():
     try:
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({
-            "success": True,
-            "message": "Professional registration successful! Please wait for admin verification."
-        }), 200
+        return jsonify({"success": True, "message": "Registration successful"}), 200
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Professional Registration Error: {e}")
-        return jsonify({
-            "success": False,
-            "message": "An internal error occurred. Please try again later."
-        }), 500
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        logging.error(f"Error: {e}")
+        return jsonify({"success": False, "message": "Server error"}), 500

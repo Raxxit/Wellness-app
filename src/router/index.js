@@ -5,11 +5,12 @@ import Profile from '@/views/Profile.vue'
 import login from '@/views/login.vue'
 import resources from '@/views/resources.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
-import ProfessionalRegistration from '@/views/ProfessionalRegistration.vue' 
+import ProfessionalRegistration from '@/views/ProfessionalRegistration.vue'
 import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
 import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
 import Report from '@/views/Report.vue'
 import Dashboard from '@/views/Dashboard.vue'
+import AdminVerification from '@/views/AdminVerification.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,9 +32,9 @@ const router = createRouter({
             component: RegistrationView,
             meta: { guestOnly: true }
         },
-         {
-             path: '/register-professional',  
-             name: 'register-professional',
+        {
+            path: '/register-professional',
+            name: 'register-professional',
             component: ProfessionalRegistration,
             meta: { guestOnly: true }
         },
@@ -65,6 +66,12 @@ const router = createRouter({
             name: 'dynamicques',
             component: DynamicQuestionnaire,
             meta: { requiresAuth: true }
+        },
+
+        {
+            path: '/adminverify',
+            name: 'adminverify',
+            component: AdminVerification,
         },
         {
             path: '/report',
