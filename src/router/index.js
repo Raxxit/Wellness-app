@@ -6,6 +6,7 @@ import login from '@/views/login.vue'
 import resources from '@/views/resources.vue'
 import AdminResource from '@/views/AdminResource.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
+import ProfessionalRegistration from '@/views/ProfessionalRegistration.vue' 
 import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
 import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
 import Report from '@/views/Report.vue'
@@ -31,6 +32,12 @@ const router = createRouter({
             path: '/register',
             name: 'register',
             component: RegistrationView,
+            meta: { guestOnly: true }
+        },
+         {
+             path: '/register-professional',  
+             name: 'register-professional',
+            component: ProfessionalRegistration,
             meta: { guestOnly: true }
         },
         {
