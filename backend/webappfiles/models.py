@@ -48,3 +48,18 @@ class WellnessResult(db.Model):
     total_score = db.Column(db.Integer)
     diagnosis_snapshot = db.Column(db.String(255))
     generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Appointment(db.Model):
+    __tablename__ = 'Appointments'
+    
+    appointment_id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable=False)
+    advisor_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable=False)
+
+    appointment_date = db.Column(db.String(50), nullable=False)
+    appointment_time = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), default='Pending')
+    notes = db.Column(db.Text)
+    
+    advisor = db.relationship('User', foreign_keys=[advisor_id])
+    client = db.relationship('User', foreign_keys=[client_id])

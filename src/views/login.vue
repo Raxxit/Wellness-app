@@ -5,7 +5,7 @@ import axios from 'axios'
 
 const router = useRouter()
 const loading = ref(false)
-const globalErrorMessage = ref('') // Renamed to avoid confusion with field errors
+const globalErrorMessage = ref('')
 
 const showPassword = ref(false)
 const rememberMe = ref(false)
@@ -15,13 +15,11 @@ const form = reactive({
   password: ''
 })
 
-// --- 1. NEW: Error State ---
 const errors = reactive({
   email: '',
   password: ''
 })
 
-// --- 2. NEW: Validation Logic ---
 const isValidEmail = (email) => {
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
@@ -60,12 +58,11 @@ onMounted(() => {
 const handleLogin = async () => {
   globalErrorMessage.value = ''
 
-  // --- 3. NEW: Check Validation Before API Call ---
   validateField('email');
   validateField('password');
 
   if (errors.email || errors.password) {
-    return; // Stop if there are local errors
+    return; 
   }
 
   loading.value = true
@@ -86,7 +83,13 @@ const handleLogin = async () => {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
 
-      router.push('/dashboard')
+      const userRole = response.data.user.role;
+      
+      if (userRole === 'Advisor') {
+        router.push('/advisordash');
+      } else {
+        router.push('/dashboard');
+      }
     }
   } catch (error) {
     if (error.response?.data?.message) {
@@ -98,6 +101,8 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+
 </script>
 
 <template>

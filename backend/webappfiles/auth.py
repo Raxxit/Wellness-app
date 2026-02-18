@@ -10,7 +10,6 @@ from werkzeug.utils import secure_filename
 
 auth_bp = Blueprint('auth', __name__)
 
-# LOGIN ROUTE
 @auth_bp.route('/login', methods=['POST'])
 def login():
     try:
@@ -38,10 +37,17 @@ def login():
                 "success": False,
                 "message": "Invalid password"
             }), 401
+            
+        if user.role == 'Advisor' and not user.is_verified:
+            return jsonify({
+                "success": False, 
+                "message": "Your advisor account is currently pending verification. Please wait for admin approval."
+            }), 403
         
         token = jwt.encode({
             'user_id': user.id,
             'email': user.email,
+            'role': user.role,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
         }, current_app.config['SECRET_KEY'], algorithm='HS256')
         
@@ -54,7 +60,8 @@ def login():
                 "username": user.username,
                 "email": user.email,
                 "age": user.age,
-                "gender": user.gender
+                "gender": user.gender,
+                "role": user.role
             }
         }), 200
         
@@ -63,6 +70,8 @@ def login():
             "success": False,
             "message": f"Login error: {str(e)}"
         }), 500
+
+
 
 
 @auth_bp.route('/profile/update', methods=['PUT'])

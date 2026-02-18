@@ -23,7 +23,12 @@ def create_app():
 
     from .auth import auth_bp
     from .admin import admin_bp
-    
+    from .advisor import advisor_bp
+    from .appointments import appointment_bp
+
+
+    app.register_blueprint(advisor_bp)
+    app.register_blueprint(appointment_bp)
     app.register_blueprint(auth_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
 

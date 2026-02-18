@@ -11,6 +11,8 @@ import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
 import Report from '@/views/Report.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import AdminVerification from '@/views/AdminVerification.vue'
+import Advisordash from '@/views/advisordash.vue'
+import Patienthistory from '@/views/patienthistory.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -85,6 +87,18 @@ const router = createRouter({
             component: Dashboard,
             meta: { requiresAuth: true }
         },
+
+        {
+            path: '/advisordash',
+            name: 'advisordash',
+            component: Advisordash,
+        },
+        {
+            path: '/advisor/patient/:id',
+            name: 'PatientHistory',
+            component: Patienthistory,
+        },
+
     ]
 })
 

@@ -8,9 +8,6 @@ admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/pending-advisors', methods=['GET'])
 def get_pending_pros():
-    all_roles = [u.role for u in User.query.all()]
-    print("DEBUG ROLES:", all_roles)
-
     pending_users = User.query.filter(User.role == 'Advisor', User.is_verified == False).all()    
     
     users_data = []
