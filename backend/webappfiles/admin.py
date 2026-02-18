@@ -1,0 +1,97 @@
+from flask import Blueprint, request, jsonify
+from .extensions import db
+from .models import Resource
+from datetime import datetime
+
+admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
+
+# Create new resource
+@admin_bp.route('/resources', methods=['POST', 'OPTIONS'])
+def create_resource():
+    if request.method == 'OPTIONS':
+        return '', 200
+        
+    try:
+        data = request.json
+        
+        resource = Resource()
+        resource.title = data.get('title')
+        resource.url = data.get('url')
+        resource.type = data.get('type')
+        resource.is_verified = 1 if data.get('is_verified') else 0
+        
+        db.session.add(resource)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Resource created successfully",
+            "id": resource.resource_id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@admin_bp.route('/resources', methods=['GET'])
+def get_resources():
+    try:
+        resources = Resource.query.order_by(Resource.created_at.desc()).all()
+        
+        result = []
+        for r in resources:
+            result.append({
+                'resource_id': r.resource_id,
+                'title': r.title,
+                'url': r.url,
+                'type': r.type,
+                'is_verified': r.is_verified,
+                'created_at': r.created_at.isoformat() if r.created_at else None
+            })
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+
+
+@admin_bp.route('/resources/<int:id>', methods=['PUT'])
+def update_resource(id):
+    try:
+        resource = Resource.query.get_or_404(id)
+        data = request.json
+        
+        # Update fields
+        resource.title = data.get('title', resource.title)
+        resource.url = data.get('url', resource.url)
+        resource.type = data.get('type', resource.type)
+        resource.is_verified = data.get('is_verified', resource.is_verified)
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Resource updated successfully"
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+
+@admin_bp.route('/resources/<int:id>', methods=['DELETE'])
+def delete_resource(id):
+    try:
+        resource = Resource.query.get_or_404(id)
+        db.session.delete(resource)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Resource deleted successfully"
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500

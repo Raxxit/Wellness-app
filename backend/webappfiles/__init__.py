@@ -1,6 +1,7 @@
 from flask import Flask
 import os
 from .extensions import db, cors
+from .admin import admin_bp
 
 def create_app():
     app = Flask(__name__)
@@ -24,5 +25,7 @@ def create_app():
     from .auth import auth_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api')
+
+    app.register_blueprint(admin_bp)
 
     return app

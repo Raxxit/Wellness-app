@@ -7,7 +7,7 @@ import "aos/dist/aos.css";
 const router = useRouter();
 const questions = ref([]);
 const answers = ref({});
-const errors = ref({}); // Store error messages per question
+const errors = ref({});
 const isLoading = ref(false);
 
 const splitEmoji = (str) => {
@@ -21,7 +21,6 @@ const splitEmoji = (str) => {
 };
 
 const toggle = (qId, optId, isMulti) => {
-    // Clear error when user interacts
     if (errors.value[qId]) delete errors.value[qId];
 
     if (!answers.value[qId]) answers.value[qId] = isMulti ? [] : null;
@@ -41,48 +40,108 @@ const isSelected = (qId, optId) => {
     return Array.isArray(val) ? val.includes(optId) : val === optId;
 };
 
-// --- VALIDATION LOGIC ---
+// Validation Logic
 const validateForm = () => {
-    errors.value = {}; // Reset errors
+    errors.value = {};
     let isValid = true;
 
     questions.value.forEach(q => {
         const ans = answers.value[q.id];
         const type = String(q.type);
 
-        // Type 0 & 3: Multi-select (Must pick at least one)
         if (['0', '3'].includes(type)) {
             if (!ans || !Array.isArray(ans) || ans.length === 0) {
                 errors.value[q.id] = "Please select at least one option.";
                 isValid = false;
             }
         }
-        // Type 1 & 5: Single Select / Radio (Must pick one)
         else if (['1', '5'].includes(type)) {
             if (ans === null || ans === undefined) {
                 errors.value[q.id] = "Please select an option.";
                 isValid = false;
             }
         }
-        // Type 4: Complex Matrix (Must answer all sub-questions)
         else if (type === '4') {
-            // Check if ans is an object and has keys for all options
             if (!ans || Object.keys(ans).length < q.options.length) {
                 errors.value[q.id] = "Please rate all items.";
                 isValid = false;
             }
         }
-        // Type 6: Textarea (Must not be empty)
         else if (type === '6') {
             if (!ans || typeof ans !== 'string' || ans.trim() === '') {
                 errors.value[q.id] = "Please write a short answer.";
                 isValid = false;
             }
         }
-        // Type 2: Slider (Always has a default value, so usually valid)
     });
 
     return isValid;
+};
+
+// Calculate score based on answers
+const calculateScore = () => {
+    let totalScore = 0;
+    
+    Object.entries(answers.value).forEach(([qId, ans]) => {
+        const question = questions.value.find(q => q.id === parseInt(qId));
+        if (!question) return;
+
+        const type = String(question.type);
+        
+        if (type === '2') { // Slider
+            totalScore += parseInt(ans) || 5;
+        }
+        else if (type === '1' || type === '5') { // Single select
+            const selectedOption = question.options.find(opt => opt.id === ans);
+            if (selectedOption) {
+                totalScore += selectedOption.weight || 2;
+            }
+        }
+        else if (type === '0' || type === '3') { // Multi select
+            totalScore += (ans.length || 0) * 3;
+        }
+        else if (type === '4') { // Matrix
+            const values = Object.values(ans);
+            totalScore += values.reduce((sum, val) => {
+                if (val === 'high') return sum + 3;
+                if (val === 'medium') return sum + 2;
+                if (val === 'low') return sum + 1;
+                return sum;
+            }, 0);
+        }
+        else if (type === '6') { // Text
+            totalScore += ans && ans.length > 20 ? 3 : 2;
+        }
+    });
+    
+    return totalScore;
+};
+
+// Determine severity based on score
+const determineSeverity = (score) => {
+    if (score > 15) return 'severe';
+    if (score > 8) return 'mild';
+    return 'healthy';
+};
+
+// Get diagnosis based on severity
+const getDiagnosis = (severity) => {
+    const diagnoses = {
+        'healthy': 'You are doing great!',
+        'mild': 'Mild anxiety detected',
+        'severe': 'Moderate to severe anxiety detected'
+    };
+    return diagnoses[severity] || 'Assessment Complete';
+};
+
+// Get advice based on severity
+const getAdvice = (severity) => {
+    const advice = {
+        'healthy': 'Keep maintaining your healthy habits and continue practicing self-care.',
+        'mild': 'Consider incorporating relaxation techniques and reaching out to your support system.',
+        'severe': 'We recommend consulting with a mental health professional for additional support.'
+    };
+    return advice[severity] || 'Take care of your mental health.';
 };
 
 onMounted(async () => {
@@ -92,7 +151,6 @@ onMounted(async () => {
         const res = await fetch('/api/questionnaire');
         questions.value = await res.json();
 
-        // Initialize answers structure correctly
         questions.value.forEach(q => {
             const type = String(q.type);
             if (['0', '3'].includes(type)) {
@@ -100,7 +158,7 @@ onMounted(async () => {
             } else if (type === '2') {
                 answers.value[q.id] = 5;
             } else if (type === '4') {
-                answers.value[q.id] = {}; // Initialize object for matrix
+                answers.value[q.id] = {};
             } else {
                 answers.value[q.id] = null;
             }
@@ -112,9 +170,7 @@ onMounted(async () => {
 });
 
 const submit = async () => {
-    // 1. Run Validation
     if (!validateForm()) {
-        // Optional: Scroll to top or first error
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
@@ -122,19 +178,38 @@ const submit = async () => {
     isLoading.value = true;
     try {
         const token = localStorage.getItem('token');
-        if (!token) return alert("You must be logged in to submit.");
+        if (!token) {
+            alert("You must be logged in to submit.");
+            router.push('/login');
+            return;
+        }
 
-        // Flatten answers for simple ID storage if needed by backend
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            alert("User data not found.");
+            return;
+        }
+
+        const userData = JSON.parse(userStr);
+        const userId = userData.id || userData.userId || Date.now().toString();
+
+        // Calculate score and severity
+        const score = calculateScore();
+        const severity = determineSeverity(score);
+        const diagnosis = getDiagnosis(severity);
+        const advice = getAdvice(severity);
+
+        // Flatten answers for backend
         let selectedOptionIds = [];
         for (const [qId, ans] of Object.entries(answers.value)) {
             if (Array.isArray(ans)) {
                 selectedOptionIds.push(...ans);
-            } else if (typeof ans === 'number' && ans > 10) {
-                // Assuming IDs > 10 logic from your snippet
+            } else if (typeof ans === 'number') {
                 selectedOptionIds.push(ans);
             }
         }
 
+        // Send to backend
         const response = await fetch('/api/submit-wellness', {
             method: 'POST',
             headers: {
@@ -142,15 +217,41 @@ const submit = async () => {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                selected_options: selectedOptionIds, // Legacy support
-                raw_answers: answers.value // Full data
+                selected_options: selectedOptionIds,
+                raw_answers: answers.value,
+                score: score,
+                severity: severity
             })
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            router.push('/report');
+            // Create assessment result object
+            const assessmentResult = {
+                score: score,
+                severity: severity,
+                diagnosis: diagnosis,
+                advice: advice,
+                date: new Date().toISOString(),
+                userId: userId
+            };
+            
+            // Store in localStorage for dashboard to detect
+            localStorage.setItem('assessmentResult', JSON.stringify(assessmentResult));
+            
+            // Also store in user's assessment history
+            const historyKey = `assessmentHistory_${userId}`;
+            const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+            history.unshift(assessmentResult);
+            localStorage.setItem(historyKey, JSON.stringify(history));
+
+            // Clear any old processed flag to ensure dashboard picks it up
+            const lastProcessedKey = `lastProcessedAssessment_${userId}`;
+            localStorage.removeItem(lastProcessedKey);
+            
+            // Redirect to report page with query param
+            router.push('/report?new=completed');
         } else {
             alert('Error: ' + result.message);
         }
@@ -270,6 +371,7 @@ const submit = async () => {
 </template>
 
 <style scoped>
+/* Your existing styles remain the same */
 .goal-card {
     cursor: pointer;
     transition: all 0.3s;
@@ -384,20 +486,12 @@ const submit = async () => {
     overflow: hidden;
 }
 
-.energy-fill {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    transition: all 0.3s ease;
-}
-
 .btn-group .btn.active {
     background-color: #667eea;
     border-color: #667eea;
     color: white;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .sleep-option span {
         font-size: 2.5rem !important;
