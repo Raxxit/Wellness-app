@@ -12,6 +12,7 @@ import Report from '@/views/Report.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 import ManageResources from '@/views/ManageResources.vue'
+import ProfessionalRegistration from '@/views/ProfessionalRegistration.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,12 +34,14 @@ const router = createRouter({
             component: RegistrationView,
             meta: { guestOnly: true }
         },
+
         {
             path: '/register-professional',
             name: 'register-professional',
             component: ProfessionalRegistration,
             meta: { guestOnly: true }
         },
+
         {
             path: '/login',
             name: 'login',
