@@ -224,6 +224,12 @@ onMounted(() => {
                   </button>
 
                   <p class="text-center mt-4 mb-0 text-muted">
+                    Register as an advisor?
+                    <router-link to="/register-professional" class="text-primary fw-bold text-decoration-none">Register
+                      Here</router-link>
+                  </p>
+
+                  <p class="text-center mt-4 mb-0 text-muted">
                     Already have an account?
                     <router-link to="/login" class="text-primary fw-bold text-decoration-none">Login here</router-link>
                   </p>

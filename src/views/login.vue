@@ -62,7 +62,7 @@ const handleLogin = async () => {
   validateField('password');
 
   if (errors.email || errors.password) {
-    return; 
+    return;
   }
 
   loading.value = true
@@ -84,7 +84,7 @@ const handleLogin = async () => {
       localStorage.setItem('user', JSON.stringify(response.data.user))
 
       const userRole = response.data.user.role;
-      
+
       if (userRole === 'Advisor') {
         router.push('/advisordash');
       } else {
@@ -201,6 +201,10 @@ const handleLogin = async () => {
           <p class="signup-link">
             New to Wellness?
             <router-link to="/register" class="signup-text">Create an account</router-link>
+          </p>
+          <p class="signup-link">
+            You want to sign up as an advisor?
+            <router-link to="/register-professional" class="signup-text">Create an advisor account</router-link>
           </p>
         </form>
 

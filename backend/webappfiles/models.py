@@ -6,17 +6,18 @@ from datetime import datetime
 
 class User(db.Model):
     __tablename__ = 'Users'
-
     id = db.Column('user_id', db.Integer, primary_key=True)
-    
     username = db.Column('user_name', db.Text, nullable=False)
-    
     email = db.Column(db.Text, unique=True, nullable=False)
-    
-    password_hash = db.Column('password_hash', db.Text, nullable=False) 
-    
+    password_hash = db.Column('password_hash', db.Text, nullable=False)
+    role = db.Column(db.Text, nullable=False, default='User')
     age = db.Column(db.Integer)
     gender = db.Column(db.Integer)
+    related_docs = db.Column(db.Text, nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    
+    is_verified = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Question(db.Model):
     __tablename__ = 'Questions'
@@ -65,3 +66,19 @@ class Appointment(db.Model):
     
     advisor = db.relationship('User', foreign_keys=[advisor_id])
     client = db.relationship('User', foreign_keys=[client_id])
+
+
+
+class Resource(db.Model):
+    __tablename__ = 'Resources'
+    
+    resource_id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # video, article, podcast, app, website, game
+    is_verified = db.Column(db.Integer, default=0)   # 0 for false, 1 for true
+    added_by_admin_id = db.Column(db.Integer, nullable=True)  # Can be NULL
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Resource {self.title}>'

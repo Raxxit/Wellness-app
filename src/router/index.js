@@ -14,6 +14,7 @@ import Dashboard from '@/views/Dashboard.vue'
 import AdminVerification from '@/views/AdminVerification.vue'
 import Advisordash from '@/views/advisordash.vue'
 import Patienthistory from '@/views/patienthistory.vue'
+import AdminDashboard from '@/views/AdminDashboard.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -81,6 +82,12 @@ const router = createRouter({
             path: '/adminverify',
             name: 'adminverify',
             component: AdminVerification,
+        },
+        {
+            path: '/admindash',
+            name: 'admindash',
+            component: AdminDashboard,
+
         },
         {
             path: '/report',

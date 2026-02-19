@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
     <h1 class="title">Admin Dashboard</h1>
-    
+
     <div class="cards-container">
       <div class="card" @click="page = 'resources'">
         <div class="icon">📚</div>
@@ -21,7 +21,8 @@
         <div class="icon">➕</div>
         <h2>More</h2>
         <p>Additional features</p>
-        <button class="card-btn">Go to More →</button>
+        <RouterLink class="card-btn" to="/adminverify">Go to More</RouterLink>
+
       </div>
     </div>
 
@@ -76,7 +77,7 @@ export default {
   color: white;
   font-size: 2.5rem;
   margin-bottom: 50px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .cards-container {
@@ -94,12 +95,12 @@ export default {
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .icon {
@@ -138,7 +139,7 @@ export default {
   border-radius: 20px;
   padding: 40px;
   margin-top: 40px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .back-btn {
