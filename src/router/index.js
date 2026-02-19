@@ -34,6 +34,12 @@ const router = createRouter({
             meta: { guestOnly: true }
         },
         {
+            path: '/register-professional',
+            name: 'register-professional',
+            component: ProfessionalRegistration,
+            meta: { guestOnly: true }
+        },
+        {
             path: '/login',
             name: 'login',
             component: login,
