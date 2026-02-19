@@ -10,11 +10,9 @@ cursor = conn.cursor()
 
 # List of ALTER commands
 alter_commands = [
-    "ALTER TABLE Users DROP COLUMN user_type",
-    "ALTER TABLE Users ADD COLUMN related_docs TEXT",
-    "ALTER TABLE Users ADD COLUMN bio TEXT",
-    "ALTER TABLE Users ADD COLUMN is_verified BOOLEAN DEFAULT 0",
-    "ALTER TABLE Users ADD COLUMN created_at DATETIME"
+
+
+
 ]
 
 # Execute each command

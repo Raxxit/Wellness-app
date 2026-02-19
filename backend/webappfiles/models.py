@@ -51,16 +51,17 @@ class WellnessResult(db.Model):
     diagnosis_snapshot = db.Column(db.String(255))
     generated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Resource(db.Model):
-    __tablename__ = 'Resources'
+class Appointment(db.Model):
+    __tablename__ = 'Appointments'
     
-    resource_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
-    url = db.Column(db.String(500), nullable=False)
-    type = db.Column(db.String(50), nullable=False)  # video, article, podcast, app, website, game
-    is_verified = db.Column(db.Integer, default=0)   # 0 for false, 1 for true
-    added_by_admin_id = db.Column(db.Integer, nullable=True)  # Can be NULL
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    appointment_id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable=False)
+    advisor_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable=False)
+
+    appointment_date = db.Column(db.String(50), nullable=False)
+    appointment_time = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), default='Pending')
+    notes = db.Column(db.Text)
     
-    def __repr__(self):
-        return f'<Resource {self.title}>'
+    advisor = db.relationship('User', foreign_keys=[advisor_id])
+    client = db.relationship('User', foreign_keys=[client_id])

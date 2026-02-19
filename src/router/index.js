@@ -6,13 +6,14 @@ import login from '@/views/login.vue'
 import resources from '@/views/resources.vue'
 import AdminResource from '@/views/AdminResource.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
+import ProfessionalRegistration from '@/views/ProfessionalRegistration.vue'
 import AdminQuestionManager from '@/views/AdminQuestionManager.vue'
 import DynamicQuestionnaire from '@/views/DynamicQuestionnaire.vue'
 import Report from '@/views/Report.vue'
 import Dashboard from '@/views/Dashboard.vue'
-import AdminDashboard from '@/views/AdminDashboard.vue'
-import ManageResources from '@/views/ManageResources.vue'
-import ProfessionalRegistration from '@/views/ProfessionalRegistration.vue'
+import AdminVerification from '@/views/AdminVerification.vue'
+import Advisordash from '@/views/advisordash.vue'
+import Patienthistory from '@/views/patienthistory.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,7 +35,6 @@ const router = createRouter({
             component: RegistrationView,
             meta: { guestOnly: true }
         },
-
         {
             path: '/register-professional',
             name: 'register-professional',
@@ -76,6 +76,12 @@ const router = createRouter({
             component: DynamicQuestionnaire,
             meta: { requiresAuth: true }
         },
+
+        {
+            path: '/adminverify',
+            name: 'adminverify',
+            component: AdminVerification,
+        },
         {
             path: '/report',
             name: 'report',
@@ -88,16 +94,18 @@ const router = createRouter({
             component: Dashboard,
             meta: { requiresAuth: true }
         },
+
         {
-            path: '/ad',
-            name: 'ad',
-            component: AdminDashboard,
+            path: '/advisordash',
+            name: 'advisordash',
+            component: Advisordash,
         },
         {
-            path: '/manageresources',
-            name: 'ManageResources',
-            component: ManageResources,
-        }
+            path: '/advisor/patient/:id',
+            name: 'PatientHistory',
+            component: Patienthistory,
+        },
+
     ]
 })
 
