@@ -90,7 +90,7 @@ export default {
       }
 
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/admin/resources', {
+        const response = await fetch('/api/admin/resources', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export default {
         console.error('Error:', error)
       } finally {
         this.loading = false
-        
+
         setTimeout(() => {
           this.message = ''
         }, 5000)
@@ -155,7 +155,7 @@ export default {
   background: white;
   padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .form-group {
@@ -273,11 +273,11 @@ export default {
   .admin-resource {
     padding: 10px;
   }
-  
+
   .resource-form {
     padding: 20px;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
