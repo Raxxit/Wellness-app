@@ -89,12 +89,12 @@
             <label>Title:</label>
             <input type="text" v-model="editForm.title" required>
           </div>
-          
+
           <div class="form-group">
             <label>URL:</label>
             <input type="url" v-model="editForm.url" required>
           </div>
-          
+
           <div class="form-group">
             <label>Type:</label>
             <select v-model="editForm.type" required>
@@ -106,14 +106,14 @@
               <option value="game">Game</option>
             </select>
           </div>
-          
+
           <div class="form-group checkbox">
             <label>
               <input type="checkbox" v-model="editForm.is_verified">
               Verified
             </label>
           </div>
-          
+
           <div class="modal-actions">
             <button type="submit" class="btn-save" :disabled="saving">
               {{ saving ? 'Saving...' : 'Save Changes' }}
@@ -180,7 +180,7 @@ export default {
     async fetchResources() {
       this.loading = true
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/admin/resources')
+        const response = await fetch('/api/admin/resources')
         const data = await response.json()
         this.resources = data
       } catch (error) {
@@ -203,46 +203,46 @@ export default {
     },
 
     async updateResource() {
-  this.saving = true
-  try {
-    const url = `http://127.0.0.1:5000/api/admin/resources/${this.editForm.resource_id}`
-    const payload = {
-      title: this.editForm.title,
-      url: this.editForm.url,
-      type: this.editForm.type,
-      is_verified: this.editForm.is_verified ? 1 : 0
-    }
-    
-    console.log('Updating resource at:', url)
-    console.log('With payload:', payload)
-    
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    })
+      this.saving = true
+      try {
+        const url = `/api/admin/resources/${this.editForm.resource_id}`
+        const payload = {
+          title: this.editForm.title,
+          url: this.editForm.url,
+          type: this.editForm.type,
+          is_verified: this.editForm.is_verified ? 1 : 0
+        }
 
-    console.log('Response status:', response.status)
-    
-    const data = await response.json()
-    console.log('Response data:', data)
+        console.log('Updating resource at:', url)
+        console.log('With payload:', payload)
 
-    if (response.ok) {
-      await this.fetchResources()
-      this.closeModal()
-      alert('Resource updated successfully!')
-    } else {
-      alert('Failed to update resource: ' + (data.message || 'Unknown error'))
-    }
-  } catch (error) {
-    console.error('Full error:', error)
-    alert('Error updating resource: ' + error.message)
-  } finally {
-    this.saving = false
-  }
-},
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        })
+
+        console.log('Response status:', response.status)
+
+        const data = await response.json()
+        console.log('Response data:', data)
+
+        if (response.ok) {
+          await this.fetchResources()
+          this.closeModal()
+          alert('Resource updated successfully!')
+        } else {
+          alert('Failed to update resource: ' + (data.message || 'Unknown error'))
+        }
+      } catch (error) {
+        console.error('Full error:', error)
+        alert('Error updating resource: ' + error.message)
+      } finally {
+        this.saving = false
+      }
+    },
 
     confirmDelete(resource) {
       this.deleteItem = resource
@@ -250,45 +250,45 @@ export default {
     },
 
     async deleteResource() {
-  this.deleting = true
-  try {
-    const url = `http://127.0.0.1:5000/api/admin/resources/${this.deleteItem.resource_id}`
-    console.log('Deleting resource at:', url)
-    console.log('Resource to delete:', this.deleteItem)
-    
-    const response = await fetch(url, {
-      method: 'DELETE'
-    })
+      this.deleting = true
+      try {
+        const url = `/api/admin/resources/${this.deleteItem.resource_id}`
+        console.log('Deleting resource at:', url)
+        console.log('Resource to delete:', this.deleteItem)
 
-    console.log('Response status:', response.status)
-    
-    // Try to get response text first
-    const text = await response.text()
-    console.log('Response text:', text)
-    
-    // Try to parse as JSON if possible
-    let data
-    try {
-      data = JSON.parse(text)
-      console.log('Response data:', data)
-    } catch (e) {
-      console.log('Response is not JSON:', text)
-    }
+        const response = await fetch(url, {
+          method: 'DELETE'
+        })
 
-    if (response.ok) {
-      await this.fetchResources()
-      this.closeDeleteModal()
-      alert('Resource deleted successfully!')
-    } else {
-      alert('Failed to delete resource. Status: ' + response.status)
-    }
-  } catch (error) {
-    console.error('Delete error:', error)
-    alert('Error deleting resource: ' + error.message)
-  } finally {
-    this.deleting = false
-  }
-},
+        console.log('Response status:', response.status)
+
+        // Try to get response text first
+        const text = await response.text()
+        console.log('Response text:', text)
+
+        // Try to parse as JSON if possible
+        let data
+        try {
+          data = JSON.parse(text)
+          console.log('Response data:', data)
+        } catch (e) {
+          console.log('Response is not JSON:', text)
+        }
+
+        if (response.ok) {
+          await this.fetchResources()
+          this.closeDeleteModal()
+          alert('Resource deleted successfully!')
+        } else {
+          alert('Failed to delete resource. Status: ' + response.status)
+        }
+      } catch (error) {
+        console.error('Delete error:', error)
+        alert('Error deleting resource: ' + error.message)
+      } finally {
+        this.deleting = false
+      }
+    },
 
     closeModal() {
       this.showEditModal = false
@@ -373,7 +373,7 @@ export default {
 .table-container {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
 }
 
@@ -404,12 +404,35 @@ export default {
   text-transform: capitalize;
 }
 
-.type-badge.video { background: #e0e7ff; color: #3730a3; }
-.type-badge.article { background: #fef3c7; color: #92400e; }
-.type-badge.podcast { background: #fae8ff; color: #86198f; }
-.type-badge.app { background: #dcfce7; color: #166534; }
-.type-badge.website { background: #cffafe; color: #155e75; }
-.type-badge.game { background: #ffe4e6; color: #991b1b; }
+.type-badge.video {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.type-badge.article {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.type-badge.podcast {
+  background: #fae8ff;
+  color: #86198f;
+}
+
+.type-badge.app {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.type-badge.website {
+  background: #cffafe;
+  color: #155e75;
+}
+
+.type-badge.game {
+  background: #ffe4e6;
+  color: #991b1b;
+}
 
 .url-link {
   color: #6366f1;
@@ -440,7 +463,8 @@ export default {
   gap: 8px;
 }
 
-.btn-edit, .btn-delete {
+.btn-edit,
+.btn-delete {
   padding: 6px 12px;
   border: none;
   border-radius: 4px;
@@ -472,7 +496,8 @@ export default {
   padding: 40px;
 }
 
-.loading, .error {
+.loading,
+.error {
   text-align: center;
   padding: 40px;
   color: #64748b;
@@ -489,7 +514,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -508,7 +533,8 @@ export default {
   width: 400px;
 }
 
-.modal-content h2, .modal-content h3 {
+.modal-content h2,
+.modal-content h3 {
   margin-top: 0;
   margin-bottom: 20px;
   color: #1e293b;
@@ -552,7 +578,8 @@ export default {
   margin-top: 20px;
 }
 
-.btn-save, .btn-cancel {
+.btn-save,
+.btn-cancel {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -588,11 +615,11 @@ export default {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .resources-table {
     font-size: 14px;
   }
-  
+
   .actions {
     flex-direction: column;
   }
