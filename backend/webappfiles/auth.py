@@ -226,3 +226,49 @@ def register_professional():
 @auth_bp.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy"}), 200
+
+
+# 1. ADMIN: Add a new Question
+
+@auth_bp.route('/add-question', methods=['POST'])
+def add_question():
+    data = request.json
+    
+    # Create the Question
+    new_q = Question(
+        question_text=data['text'],
+        type=data['type'],
+        is_active=True
+    )
+    db.session.add(new_q)
+    db.session.flush() # Flush to get the new question_id before committing
+    
+    for opt in data['options']:
+        new_opt = QuestionOption(
+            question_id=new_q.question_id,
+            option_text=opt['text'],
+            weight=int(opt['weight'])
+        )
+        db.session.add(new_opt)
+        
+    db.session.commit()
+    return jsonify({"message": "Question added", "id": new_q.question_id})
+
+
+
+@auth_bp.route('/delete-question/<int:q_id>', methods=['DELETE'])
+def delete_question(q_id):
+    try:
+        # Find the question
+        question = Question.query.get(q_id)
+        if not question:
+            return jsonify({"success": False, "message": "Question not found"}), 404
+            
+        QuestionOption.query.filter_by(question_id=q_id).delete()
+        db.session.delete(question)
+        db.session.commit()
+        
+        return jsonify({"success": True, "message": "Question deleted"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
